@@ -27,6 +27,16 @@ import type { ProviderName, ActualCost } from "../types.js";
 import { DeepEyeClawError, BudgetExceededError } from "../utils/errors.js";
 import { childLogger } from "../utils/logger.js";
 import { startTimer, uid, truncate } from "../utils/helpers.js";
+import {
+  recordQueryMetrics,
+  recordEscalation,
+  recordError as recordMetricError,
+  queriesInFlight,
+  updateBudgetMetrics,
+  updateCacheMetrics,
+  updateProviderHealth,
+  getMetricsOutput,
+} from "../metrics.js";
 
 const log = childLogger("routes");
 
@@ -56,6 +66,8 @@ export function createRouter(deps: RouteDeps): Router {
       return;
     }
 
+    queriesInFlight.inc();
+
     try {
       // 1. Classify
       const classification = classifyQuery(content);
@@ -73,6 +85,20 @@ export function createRouter(deps: RouteDeps): Router {
           const ms = elapsed();
           const event = analytics.recordCacheHit(content, hit.entry.cost);
           ws.broadcastEvent(event);
+
+          recordQueryMetrics({
+            provider: hit.entry.provider,
+            model: hit.entry.model,
+            strategy: "cache",
+            complexity: classification.complexity,
+            intent: classification.intent,
+            cacheHit: true,
+            responseTimeMs: ms,
+            costUsd: 0,
+            inputTokens: 0,
+            outputTokens: 0,
+          });
+          queriesInFlight.dec();
 
           res.json({
             id: requestId,
@@ -139,6 +165,10 @@ export function createRouter(deps: RouteDeps): Router {
               cost: 0,
               isLast: !nextStep,
             });
+            // Prometheus: record escalation if not the last step
+            if (nextStep) {
+              recordEscalation(step.provider, step.model, nextStep.provider, nextStep.model);
+            }
           },
         });
         response = result.response;
@@ -179,6 +209,21 @@ export function createRouter(deps: RouteDeps): Router {
       });
       ws.broadcastEvent(event);
 
+      // Prometheus metrics
+      recordQueryMetrics({
+        provider: response.provider,
+        model: response.model,
+        strategy: decision.strategy,
+        complexity: classification.complexity,
+        intent: classification.intent,
+        cacheHit: false,
+        responseTimeMs: ms,
+        costUsd: response.cost,
+        inputTokens: response.tokens.input,
+        outputTokens: response.tokens.output,
+      });
+      queriesInFlight.dec();
+
       // 10. Budget alerts
       const budgetStatus = budget.getStatus("daily");
       if (budgetStatus.percentUsed > 75) {
@@ -215,6 +260,8 @@ export function createRouter(deps: RouteDeps): Router {
       );
 
       analytics.recordError(truncate(content ?? ""), error.message, undefined);
+      recordMetricError("unknown", error.code ?? "INTERNAL_ERROR");
+      queriesInFlight.dec();
       log.error("query failed", { requestId, error: error.message, ms });
 
       res.status(error.statusCode).json(error.toJSON());
@@ -364,6 +411,30 @@ export function createRouter(deps: RouteDeps): Router {
       },
       providers: providerStatuses,
     });
+  });
+
+  // ── GET /metrics ─────────────────────────────────────────────────────
+
+  router.get("/metrics", async (_req: Request, res: Response) => {
+    // Update gauge snapshots before scrape
+    const budgetStatuses = budget.getAllStatuses().map((s) => ({
+      period: s.period,
+      remaining: s.remaining,
+      percentUsed: s.percentUsed,
+    }));
+    updateBudgetMetrics(budgetStatuses, budget.isEmergencyMode);
+
+    const cacheStats = cache.getStats();
+    updateCacheMetrics(cacheStats.totalEntries, analytics.cacheHitRate());
+
+    for (const [name, provider] of providers) {
+      const health = provider.getHealth();
+      updateProviderHealth(name, health.status === "healthy");
+    }
+
+    const { body, contentType } = await getMetricsOutput();
+    res.set("Content-Type", contentType);
+    res.end(body);
   });
 
   return router;

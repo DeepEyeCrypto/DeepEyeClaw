@@ -107,6 +107,18 @@ export { PerplexityProvider } from "./providers/perplexity.js";
 export { OpenAIProvider } from "./providers/openai.js";
 export { AnthropicProvider } from "./providers/anthropic.js";
 
+// Metrics
+export {
+  registry as metricsRegistry,
+  recordQueryMetrics,
+  recordEscalation,
+  recordError as recordMetricError,
+  updateBudgetMetrics,
+  updateCacheMetrics,
+  updateProviderHealth,
+  getMetricsOutput,
+} from "./metrics.js";
+
 // Utilities
 export { DeepEyeClawError, ProviderError, BudgetExceededError, CacheError, RateLimitError } from "./utils/errors.js";
 export { uid, sleep, hashString, formatCost, truncate, startTimer } from "./utils/helpers.js";
