@@ -96,7 +96,7 @@ jobs:
             esac
 
             case "$path" in
-              src/*|test/*|extensions/*|packages/*|scripts/*|ui/*|.github/*|openclaw.mjs|package.json|pnpm-lock.yaml|pnpm-workspace.yaml|tsconfig*.json|vitest*.ts|tsdown.config.ts|.oxlintrc.json|.oxfmtrc.jsonc)
+              src/*|test/*|extensions/*|packages/*|scripts/*|ui/*|.github/*|openclaw.mjs|package.json|package-lock.json|pnpm-workspace.yaml|tsconfig*.json|vitest*.ts|tsdown.config.ts|.oxlintrc.json|.oxfmtrc.jsonc)
                 run_node=true
                 ;;
             esac
@@ -136,7 +136,7 @@ jobs:
           install-bun: "false"
 
       - name: Build dist
-        run: pnpm build
+        run: npm run build
 
       - name: Upload dist artifact
         uses: actions/upload-artifact@v4
@@ -168,7 +168,7 @@ jobs:
           path: dist/
 
       - name: Check release contents
-        run: pnpm release:check
+        run: npm run release:check
 
   checks:
     needs: [docs-scope, changed-scope, code-analysis, check]
@@ -180,13 +180,13 @@ jobs:
         include:
           - runtime: node
             task: test
-            command: pnpm canvas:a2ui:bundle && pnpm test
+            command: npm run canvas:a2ui:bundle && npm test
           - runtime: node
             task: protocol
-            command: pnpm protocol:check
+            command: npm run protocol:check
           - runtime: bun
             task: test
-            command: pnpm canvas:a2ui:bundle && bunx vitest run --config vitest.unit.config.ts
+            command: npm run canvas:a2ui:bundle && bunx vitest run --config vitest.unit.config.ts
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -215,7 +215,7 @@ jobs:
         uses: ./.github/actions/setup-node-env
 
       - name: Check types and lint and oxfmt
-        run: pnpm check
+        run: npm run check
 
   # Validate docs (format, lint, broken links) only when docs files changed.
   check-docs:
@@ -232,7 +232,7 @@ jobs:
         uses: ./.github/actions/setup-node-env
 
       - name: Check docs
-        run: pnpm check:docs
+        run: npm run check:docs
 
   # Check for files that grew past LOC threshold in this PR (delta-only).
   # On push events, all steps are skipped and the job passes (no-op).
@@ -308,13 +308,13 @@ jobs:
         include:
           - runtime: node
             task: lint
-            command: pnpm lint
+            command: npm run lint
           - runtime: node
             task: test
-            command: pnpm canvas:a2ui:bundle && pnpm test
+            command: npm run canvas:a2ui:bundle && npm test
           - runtime: node
             task: protocol
-            command: pnpm protocol:check
+            command: npm run protocol:check
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -359,12 +359,7 @@ jobs:
         with:
           node-version: 22.x
           check-latest: true
-
-      - name: Setup pnpm + cache store
-        uses: ./.github/actions/setup-pnpm-store-cache
-        with:
-          pnpm-version: "10.23.0"
-          cache-key-suffix: "node22"
+          cache: 'npm'
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -376,7 +371,6 @@ jobs:
           node -v
           npm -v
           bun -v
-          pnpm -v
 
       - name: Capture node path
         run: echo "NODE_BIN=$(dirname \"$(node -p \"process.execPath\")\")" >> "$GITHUB_ENV"
@@ -388,8 +382,7 @@ jobs:
           export PATH="$NODE_BIN:$PATH"
           which node
           node -v
-          pnpm -v
-          pnpm install --frozen-lockfile --ignore-scripts=false --config.engine-strict=false --config.enable-pre-post-scripts=true || pnpm install --frozen-lockfile --ignore-scripts=false --config.engine-strict=false --config.enable-pre-post-scripts=true
+          npm ci
 
       - name: Run ${{ matrix.task }} (${{ matrix.runtime }})
         run: ${{ matrix.command }}
@@ -417,7 +410,7 @@ jobs:
       - name: TS tests (macOS)
         env:
           NODE_OPTIONS: --max-old-space-size=4096
-        run: pnpm test
+        run: npm test
 
       # --- Xcode/Swift setup ---
       - name: Select Xcode 26.1

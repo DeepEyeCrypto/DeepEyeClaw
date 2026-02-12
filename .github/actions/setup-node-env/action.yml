@@ -1,22 +1,18 @@
 name: Setup Node environment
 description: >
-  Initialize submodules with retry, install Node 22, pnpm, optionally Bun,
-  and run pnpm install. Requires actions/checkout to run first.
+  Initialize submodules with retry, install Node 22, npm, optionally Bun,
+  and run npm install. Requires actions/checkout to run first.
 inputs:
   node-version:
     description: Node.js version to install.
     required: false
     default: "22.x"
-  pnpm-version:
-    description: pnpm version for corepack.
-    required: false
-    default: "10.23.0"
   install-bun:
     description: Whether to install Bun alongside Node.
     required: false
     default: "true"
   frozen-lockfile:
-    description: Whether to use --frozen-lockfile for install.
+    description: Whether to use npm ci (true) or npm install (false).
     required: false
     default: "true"
 runs:
@@ -41,12 +37,7 @@ runs:
       with:
         node-version: ${{ inputs.node-version }}
         check-latest: true
-
-    - name: Setup pnpm + cache store
-      uses: ./.github/actions/setup-pnpm-store-cache
-      with:
-        pnpm-version: ${{ inputs.pnpm-version }}
-        cache-key-suffix: "node22"
+        cache: 'npm'
 
     - name: Setup Bun
       if: inputs.install-bun == 'true'
@@ -59,7 +50,6 @@ runs:
       run: |
         node -v
         npm -v
-        pnpm -v
         if command -v bun &>/dev/null; then bun -v; fi
 
     - name: Capture node path
@@ -74,10 +64,9 @@ runs:
         export PATH="$NODE_BIN:$PATH"
         which node
         node -v
-        pnpm -v
-        LOCKFILE_FLAG=""
+        npm -v
         if [ "${{ inputs.frozen-lockfile }}" = "true" ]; then
-          LOCKFILE_FLAG="--frozen-lockfile"
+          npm ci
+        else
+          npm install
         fi
-        pnpm install $LOCKFILE_FLAG --ignore-scripts=false --config.engine-strict=false --config.enable-pre-post-scripts=true || \
-        pnpm install $LOCKFILE_FLAG --ignore-scripts=false --config.engine-strict=false --config.enable-pre-post-scripts=true

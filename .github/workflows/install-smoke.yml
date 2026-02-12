@@ -33,22 +33,14 @@ jobs:
       - name: Checkout CLI
         uses: actions/checkout@v4
 
-      - name: Setup pnpm (corepack retry)
-        run: |
-          set -euo pipefail
-          corepack enable
-          for attempt in 1 2 3; do
-            if corepack prepare pnpm@10.23.0 --activate; then
-              pnpm -v
-              exit 0
-            fi
-            echo "corepack prepare failed (attempt $attempt/3). Retrying..."
-            sleep $((attempt * 10))
-          done
-          exit 1
+      - name: Setup npm
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: 'npm'
 
-      - name: Install pnpm deps (minimal)
-        run: pnpm install --ignore-scripts --frozen-lockfile
+      - name: Install npm deps (minimal)
+        run: npm ci --ignore-scripts --no-audit
 
       - name: Run installer docker tests
         env:
@@ -58,4 +50,4 @@ jobs:
           CLAWDBOT_INSTALL_SMOKE_SKIP_CLI: "1"
           CLAWDBOT_INSTALL_SMOKE_SKIP_NONROOT: ${{ github.event_name == 'pull_request' && '1' || '0' }}
           CLAWDBOT_INSTALL_SMOKE_SKIP_PREVIOUS: "1"
-        run: pnpm test:install:smoke
+        run: npm run test:install:smoke
