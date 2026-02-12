@@ -216,6 +216,7 @@ npx tsc --noEmit --project tsconfig.deepeye.json
 | `GET` | `/api/artifacts` | Recent routing artifacts (filterable by type/tag) |
 | `GET` | `/api/artifacts/:queryId` | All artifacts for a specific query |
 | `GET` | `/api/manager-view` | Aggregated system status for dashboards |
+| `GET` | `/metrics` | Prometheus metrics (scrape target) |
 
 ### Example Query
 
@@ -385,7 +386,6 @@ Full config reference: [`deepeyeclaw.config.yaml`](deepeyeclaw.config.yaml)
 
 ## Roadmap
 
-- [ ] Prometheus metrics integration
 - [ ] FAISS vector store for semantic cache
 - [ ] CLI tools for gateway management
 - [ ] Manager View + Artifact Viewer dashboard pages
