@@ -22,6 +22,7 @@ import {
   buildTogetherModelDefinition,
 } from "./together-models.js";
 import { discoverVeniceModels, VENICE_BASE_URL } from "./venice-models.js";
+import { buildPerplexityProvider } from "../deepeye/perplexity-provider.js";
 
 type ModelsConfig = NonNullable<OpenClawConfig["models"]>;
 export type ProviderConfig = NonNullable<ModelsConfig["providers"]>[string];
@@ -564,6 +565,13 @@ export async function resolveImplicitProviders(params: {
     resolveApiKeyFromProfiles({ provider: "qianfan", store: authStore });
   if (qianfanKey) {
     providers.qianfan = { ...buildQianfanProvider(), apiKey: qianfanKey };
+  }
+
+  const perplexityKey =
+    resolveEnvApiKeyVarName("perplexity") ??
+    resolveApiKeyFromProfiles({ provider: "perplexity", store: authStore });
+  if (perplexityKey) {
+    providers.perplexity = { ...buildPerplexityProvider(), apiKey: perplexityKey };
   }
 
   return providers;

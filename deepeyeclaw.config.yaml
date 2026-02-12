@@ -1,0 +1,176 @@
+# ─── DeepEyeClaw Gateway Configuration ─────────────────────────────────────
+#
+# This file controls provider settings, routing strategies, budget limits,
+# cache parameters, and analytics configuration.
+#
+# Environment variables can be injected using ${VAR_NAME:-default} syntax.
+
+providers:
+  perplexity:
+    enabled: true
+    apiKey: ${PERPLEXITY_API_KEY}
+    baseUrl: https://api.perplexity.ai
+    timeout: 60000
+    maxRetries: 2
+    monthlyCreditLimit: 50
+    alertAtPercentage: 80
+    models:
+      - name: sonar
+        inputCostPer1k: 0.001
+        outputCostPer1k: 0.001
+        maxTokens: 4096
+        contextWindow: 128000
+        useFor: [simple, medium]
+        features: [web_search, citations]
+      - name: sonar-pro
+        inputCostPer1k: 0.003
+        outputCostPer1k: 0.015
+        maxTokens: 8192
+        contextWindow: 200000
+        useFor: [medium, complex]
+        features: [web_search, citations, deep_search]
+      - name: sonar-reasoning-pro
+        inputCostPer1k: 0.002
+        outputCostPer1k: 0.008
+        maxTokens: 16384
+        contextWindow: 128000
+        useFor: [complex]
+        features: [web_search, citations, reasoning, chain_of_thought]
+
+  openai:
+    enabled: true
+    apiKey: ${OPENAI_API_KEY}
+    baseUrl: https://api.openai.com/v1
+    timeout: 60000
+    maxRetries: 3
+    models:
+      - name: gpt-4o-mini
+        inputCostPer1k: 0.00015
+        outputCostPer1k: 0.0006
+        maxTokens: 16384
+        contextWindow: 128000
+        useFor: [simple, medium]
+        features: [code, images]
+      - name: gpt-4o
+        inputCostPer1k: 0.005
+        outputCostPer1k: 0.015
+        maxTokens: 16384
+        contextWindow: 128000
+        useFor: [medium, complex]
+        features: [code, images, reasoning, long_context]
+
+  anthropic:
+    enabled: true
+    apiKey: ${ANTHROPIC_API_KEY}
+    baseUrl: https://api.anthropic.com/v1
+    timeout: 120000
+    maxRetries: 2
+    models:
+      - name: claude-sonnet-4-5
+        inputCostPer1k: 0.003
+        outputCostPer1k: 0.015
+        maxTokens: 8192
+        contextWindow: 200000
+        useFor: [medium, complex]
+        features: [code, reasoning, long_context]
+      - name: claude-opus-4-6
+        inputCostPer1k: 0.015
+        outputCostPer1k: 0.075
+        maxTokens: 4096
+        contextWindow: 200000
+        useFor: [complex]
+        features: [reasoning, chain_of_thought, long_context]
+
+routing:
+  strategy: cascade
+  defaultProvider: perplexity
+  complexityThresholds:
+    simple: 0.3
+    medium: 0.6
+    complex: 0.85
+  cascadeChains:
+    simple:
+      - provider: perplexity
+        model: sonar
+        qualityThreshold: 7
+        maxCost: 0.01
+      - provider: openai
+        model: gpt-4o-mini
+        qualityThreshold: 8
+        maxCost: 0.05
+    medium:
+      - provider: perplexity
+        model: sonar-pro
+        qualityThreshold: 7.5
+        maxCost: 0.02
+      - provider: openai
+        model: gpt-4o-mini
+        qualityThreshold: 8.5
+        maxCost: 0.08
+      - provider: anthropic
+        model: claude-sonnet-4-5
+        qualityThreshold: 9
+        maxCost: 0.15
+    complex:
+      - provider: perplexity
+        model: sonar-reasoning-pro
+        qualityThreshold: 8
+        maxCost: 0.05
+      - provider: openai
+        model: gpt-4o
+        qualityThreshold: 9
+        maxCost: 0.15
+      - provider: anthropic
+        model: claude-sonnet-4-5
+        qualityThreshold: 9.5
+        maxCost: 0.30
+
+cache:
+  enabled: true
+  type: memory  # memory | redis | sqlite
+  similarityThreshold: 0.82
+  ttl:
+    default: 3600         # 1 hour
+    realtimeQueries: 60   # 1 minute
+    staticContent: 86400  # 24 hours
+  maxEntries: 1000
+
+budget:
+  dailyLimit: 5.00
+  weeklyLimit: 30.00
+  monthlyLimit: 100.00
+  alertThresholds:
+    - percentage: 75
+      action: log
+    - percentage: 90
+      action: notify
+      channels: [console, webhook]
+    - percentage: 95
+      action: emergency_mode
+  emergencyMode:
+    enabled: true
+    forceCacheOnly: false
+    forceCheapestModels: true
+    disableExpensiveProviders: [anthropic]
+    notifyAdmin: true
+    queueRequests: false
+
+analytics:
+  enabled: true
+  logLevel: info
+  metrics:
+    - cost_per_query
+    - response_time
+    - cache_hit_rate
+    - model_distribution
+    - error_rate
+    - tokens_used
+    - quality_scores
+  storage:
+    type: file
+    path: ./data/analytics
+
+gateway:
+  host: 0.0.0.0
+  port: 3100
+  websocketPort: 3100

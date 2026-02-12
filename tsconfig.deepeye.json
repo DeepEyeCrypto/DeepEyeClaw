@@ -1,0 +1,14 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+        "noEmit": true
+    },
+    "include": [
+        "src/deepeye/**/*"
+    ],
+    "exclude": [
+        "node_modules",
+        "dist",
+        "src/deepeye/**/*.test.ts"
+    ]
+}

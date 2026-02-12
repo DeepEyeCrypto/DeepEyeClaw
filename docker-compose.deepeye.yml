@@ -1,0 +1,52 @@
+# DeepEyeClaw – Docker Compose (Gateway + Dashboard)
+# Run: docker compose -f docker-compose.deepeye.yml up -d
+#
+# Services:
+#   gateway  – Express + WebSocket API (port 3100)
+#   redis    – Distributed cache (optional)
+#   dashboard – Vite dev server (port 5173)
+
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile.gateway
+    ports:
+      - "3100:3100"
+    environment:
+      - GATEWAY_PORT=3100
+      - PERPLEXITY_API_KEY=${PERPLEXITY_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - BUDGET_DAILY=5
+      - BUDGET_WEEKLY=30
+      - BUDGET_MONTHLY=100
+      - CACHE_MAX_ENTRIES=1000
+      - CACHE_SIMILARITY=0.82
+      - LOG_LEVEL=info
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - redis
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "-q", "http://localhost:3100/" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  redis_data:
