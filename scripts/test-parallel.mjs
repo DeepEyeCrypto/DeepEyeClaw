@@ -1,7 +1,7 @@
 import { spawn } from "node:child_process";
 import os from "node:os";
 
-const pnpm = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
+const runner = process.platform === "win32" ? "npx.cmd" : "npx";
 
 const runs = [
   {
@@ -62,7 +62,7 @@ const runOnce = (entry, extraArgs = []) =>
       (acc, flag) => (acc.includes(flag) ? acc : `${acc} ${flag}`.trim()),
       nodeOptions,
     );
-    const child = spawn(pnpm, args, {
+    const child = spawn(runner, args, {
       stdio: "inherit",
       env: { ...process.env, VITEST_GROUP: entry.name, NODE_OPTIONS: nextNodeOptions },
       shell: process.platform === "win32",
@@ -107,7 +107,7 @@ if (passthroughArgs.length > 0) {
     nodeOptions,
   );
   const code = await new Promise((resolve) => {
-    const child = spawn(pnpm, args, {
+    const child = spawn(runner, args, {
       stdio: "inherit",
       env: { ...process.env, NODE_OPTIONS: nextNodeOptions },
       shell: process.platform === "win32",
