@@ -37,8 +37,7 @@ const log = childLogger("server");
 
 // ── Configuration ───────────────────────────────────────────────────────────
 
-const PORT = parseInt(process.env.GATEWAY_PORT ?? "3100", 10);
-const HOST = process.env.GATEWAY_HOST ?? "0.0.0.0";
+// PORT/HOST are now evaluated lazily inside startGateway() to support CLI overrides
 
 // ── Provider Discovery ──────────────────────────────────────────────────────
 
@@ -71,6 +70,9 @@ function discoverProviders(): Map<ProviderName, BaseProvider> {
 // ── Bootstrap ───────────────────────────────────────────────────────────────
 
 export async function startGateway() {
+  const PORT = parseInt(process.env.GATEWAY_PORT ?? "3100", 10);
+  const HOST = process.env.GATEWAY_HOST ?? "0.0.0.0";
+
   log.info("═══════════════════════════════════════════════════");
   log.info("  DeepEyeClaw Gateway v2.0 — Starting...");
   log.info("═══════════════════════════════════════════════════");

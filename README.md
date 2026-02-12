@@ -185,10 +185,28 @@ export ANTHROPIC_API_KEY=sk-ant-...
 
 ```bash
 # Start the gateway
-pnpm gateway:dev
+npm run deepeye start
 
 # Start the dashboard (separate terminal)
 cd dashboard && npm run dev
+```
+
+### CLI
+
+`npm run deepeye <command>`
+
+| Command | Description |
+|---------|-------------|
+| `start` | Start the gateway server |
+| `status` | Check gateway health and provider status |
+| `config` | View active configuration |
+| `budget` | Check budget usage and mode |
+| `metrics` | Fetch Prometheus metrics raw text |
+
+Example:
+
+```bash
+npm run deepeye status -- --url http://localhost:4040
 ```
 
 ### Test
@@ -387,7 +405,6 @@ Full config reference: [`deepeyeclaw.config.yaml`](deepeyeclaw.config.yaml)
 ## Roadmap
 
 - [ ] FAISS vector store for semantic cache
-- [ ] CLI tools for gateway management
 - [ ] Manager View + Artifact Viewer dashboard pages
 - [ ] Streaming response support
 - [ ] Rate limiting per provider
