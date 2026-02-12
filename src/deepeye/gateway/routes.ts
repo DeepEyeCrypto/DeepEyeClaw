@@ -281,6 +281,7 @@ export function createRouter(deps: RouteDeps): Router {
 
     res.json({
       status: "ok",
+      version: "2.0.0",
       providers: health,
       wsClients: ws.getConnectedClients(),
       uptime: process.uptime(),
