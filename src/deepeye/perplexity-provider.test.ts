@@ -145,9 +145,7 @@ describe("formatCitations", () => {
   });
 
   it("formats object citations", () => {
-    const result = formatCitations([
-      { url: "https://example.com", text: "Example" },
-    ]);
+    const result = formatCitations([{ url: "https://example.com", text: "Example" }]);
     expect(result).toContain("https://example.com");
   });
 

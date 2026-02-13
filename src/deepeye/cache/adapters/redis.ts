@@ -30,7 +30,9 @@ export class RedisAdapter implements CacheAdapter {
       this.client.on("error", (err: Error) => log.error("Redis error", { error: err.message }));
       this.client.on("connect", () => log.info("Redis connected"));
     } catch (err) {
-      log.error("Failed to initialize Redis adapter — falling back", { error: (err as Error).message });
+      log.error("Failed to initialize Redis adapter — falling back", {
+        error: (err as Error).message,
+      });
       throw err;
     }
   }
@@ -41,7 +43,9 @@ export class RedisAdapter implements CacheAdapter {
 
   async get(key: string): Promise<CacheEntry | null> {
     const raw = await this.client.get(this.key(key));
-    if (!raw) return null;
+    if (!raw) {
+      return null;
+    }
     try {
       return JSON.parse(raw) as CacheEntry;
     } catch {
@@ -74,7 +78,9 @@ export class RedisAdapter implements CacheAdapter {
 
   async entries(): Promise<CacheEntry[]> {
     const keys = await this.client.keys(`${this.prefix}*`);
-    if (keys.length === 0) return [];
+    if (keys.length === 0) {
+      return [];
+    }
 
     const pipeline = this.client.pipeline();
     for (const k of keys) {

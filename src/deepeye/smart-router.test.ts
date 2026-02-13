@@ -3,10 +3,10 @@
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
-import { routeQuery, executeCascade } from "./smart-router.js";
-import { classifyQuery } from "./query-classifier.js";
-import { resetBudgetTracker, BudgetTracker, getBudgetTracker } from "./budget-tracker.js";
 import type { ProviderName, CascadeStep } from "./types.js";
+import { resetBudgetTracker, BudgetTracker, getBudgetTracker } from "./budget-tracker.js";
+import { classifyQuery } from "./query-classifier.js";
+import { routeQuery, executeCascade } from "./smart-router.js";
 
 describe("routeQuery", () => {
   beforeEach(() => {
@@ -86,12 +86,14 @@ describe("routeQuery", () => {
     });
 
     it("disables providers in emergency mode", () => {
-      const tracker = getBudgetTracker({ emergencyMode: {
-        enabled: true,
-        forceCheapestModels: true,
-        disableProviders: ["anthropic"],
-        notifyAdmin: false,
-      }});
+      const tracker = getBudgetTracker({
+        emergencyMode: {
+          enabled: true,
+          forceCheapestModels: true,
+          disableProviders: ["anthropic"],
+          notifyAdmin: false,
+        },
+      });
       tracker.setEmergencyMode(true);
 
       const query = classifyQuery("Complex architecture design");
@@ -184,7 +186,9 @@ describe("executeCascade", () => {
     const result = await executeCascade({
       chain,
       run: async (provider, model) => {
-        if (model === "gpt-4o-mini") throw new Error("Model unavailable");
+        if (model === "gpt-4o-mini") {
+          throw new Error("Model unavailable");
+        }
         return `response from ${provider}/${model}`;
       },
       evaluate: () => 9,
@@ -201,7 +205,9 @@ describe("executeCascade", () => {
     await expect(
       executeCascade({
         chain,
-        run: async () => { throw new Error("Fail"); },
+        run: async () => {
+          throw new Error("Fail");
+        },
         evaluate: () => 10,
       }),
     ).rejects.toThrow("All cascade steps failed");

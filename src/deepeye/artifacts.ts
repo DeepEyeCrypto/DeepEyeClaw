@@ -9,9 +9,9 @@
  */
 
 import { EventEmitter } from "node:events";
-import type { ClassifiedQuery, RoutingDecision, ProviderName, ActualCost } from "./types.js";
 import type { ChatResponse } from "./providers/base.js";
 import type { QualityReport } from "./quality-estimator.js";
+import type { ClassifiedQuery, RoutingDecision, ProviderName, ActualCost } from "./types.js";
 import { uid } from "./utils/helpers.js";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -134,7 +134,7 @@ export class ArtifactManager extends EventEmitter {
         model: step.model,
         qualityScore: 0,
         qualityThreshold: step.qualityThreshold,
-        action: i === 0 ? "accepted" as const : "escalated" as const,
+        action: i === 0 ? ("accepted" as const) : ("escalated" as const),
         costEstimate: step.maxCost,
       })),
       tags: [
@@ -164,7 +164,9 @@ export class ArtifactManager extends EventEmitter {
   }): RoutingArtifact {
     const type: ArtifactType = params.toProvider
       ? "cascade_escalation"
-      : (params.qualityScore >= params.qualityThreshold ? "cascade_success" : "cascade_failure");
+      : params.qualityScore >= params.qualityThreshold
+        ? "cascade_success"
+        : "cascade_failure";
 
     const artifact: RoutingArtifact = {
       id: uid(),
@@ -257,9 +259,15 @@ export class ArtifactManager extends EventEmitter {
   }
 
   /** Enrich an existing artifact with response data */
-  enrichWithResponse(artifactId: string, response: ChatResponse, qualityReport?: QualityReport): void {
-    const artifact = this.artifacts.find(a => a.id === artifactId);
-    if (!artifact) return;
+  enrichWithResponse(
+    artifactId: string,
+    response: ChatResponse,
+    qualityReport?: QualityReport,
+  ): void {
+    const artifact = this.artifacts.find((a) => a.id === artifactId);
+    if (!artifact) {
+      return;
+    }
 
     artifact.actualCost = response.cost;
     artifact.response = {
@@ -283,31 +291,31 @@ export class ArtifactManager extends EventEmitter {
 
   /** Get all artifacts for a query */
   getByQueryId(queryId: string): RoutingArtifact[] {
-    return this.artifacts.filter(a => a.queryId === queryId);
+    return this.artifacts.filter((a) => a.queryId === queryId);
   }
 
   /** Get artifacts by type */
   getByType(type: ArtifactType, limit?: number): RoutingArtifact[] {
-    const filtered = this.artifacts.filter(a => a.type === type);
+    const filtered = this.artifacts.filter((a) => a.type === type);
     return limit ? filtered.slice(0, limit) : filtered;
   }
 
   /** Get artifacts by tag */
   getByTag(tag: string, limit?: number): RoutingArtifact[] {
-    const filtered = this.artifacts.filter(a => a.tags.includes(tag));
+    const filtered = this.artifacts.filter((a) => a.tags.includes(tag));
     return limit ? filtered.slice(0, limit) : filtered;
   }
 
   /** Get artifacts in a time range */
   getByTimeRange(startMs: number, endMs: number): RoutingArtifact[] {
-    return this.artifacts.filter(a => a.epochMs >= startMs && a.epochMs <= endMs);
+    return this.artifacts.filter((a) => a.epochMs >= startMs && a.epochMs <= endMs);
   }
 
   /** Get summary statistics */
   getSummary() {
     const now = Date.now();
     const dayStart = now - 86_400_000;
-    const today = this.artifacts.filter(a => a.epochMs >= dayStart);
+    const today = this.artifacts.filter((a) => a.epochMs >= dayStart);
 
     const byType: Record<string, number> = {};
     const totalCost = today.reduce((sum, a) => {
@@ -315,11 +323,10 @@ export class ArtifactManager extends EventEmitter {
       return sum + (a.actualCost ?? a.estimatedCost);
     }, 0);
 
-    const cascadeEscalations = today.filter(a => a.type === "cascade_escalation").length;
-    const cacheHits = today.filter(a => a.type === "cache_hit").length;
-    const avgConfidence = today.length > 0
-      ? today.reduce((sum, a) => sum + a.confidence, 0) / today.length
-      : 0;
+    const cascadeEscalations = today.filter((a) => a.type === "cascade_escalation").length;
+    const cacheHits = today.filter((a) => a.type === "cache_hit").length;
+    const avgConfidence =
+      today.length > 0 ? today.reduce((sum, a) => sum + a.confidence, 0) / today.length : 0;
 
     return {
       totalArtifacts: this.artifacts.length,
@@ -354,7 +361,9 @@ export class ArtifactManager extends EventEmitter {
 let _manager: ArtifactManager | null = null;
 
 export function getArtifactManager(): ArtifactManager {
-  if (!_manager) _manager = new ArtifactManager();
+  if (!_manager) {
+    _manager = new ArtifactManager();
+  }
   return _manager;
 }
 

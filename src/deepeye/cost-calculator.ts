@@ -107,18 +107,14 @@ export function getModelCostProfile(
   provider: ProviderName,
   model: string,
 ): ModelCostProfile | undefined {
-  return MODEL_COSTS.find(
-    (m) => m.provider === provider && m.model === model,
-  );
+  return MODEL_COSTS.find((m) => m.provider === provider && m.model === model);
 }
 
 export function listModelCostProfiles(): ModelCostProfile[] {
   return [...MODEL_COSTS];
 }
 
-export function listModelsForComplexity(
-  complexity: QueryComplexity,
-): ModelCostProfile[] {
+export function listModelsForComplexity(complexity: QueryComplexity): ModelCostProfile[] {
   return MODEL_COSTS.filter((m) => m.suitableFor.includes(complexity));
 }
 
@@ -132,13 +128,9 @@ export function listModelsByCost(
   return candidates
     .map((profile) => ({
       profile,
-      estimatedCost: estimateCostForModel(
-        profile,
-        estimatedInputTokens,
-        estimatedOutputTokens,
-      ),
+      estimatedCost: estimateCostForModel(profile, estimatedInputTokens, estimatedOutputTokens),
     }))
-    .sort((a, b) => a.estimatedCost - b.estimatedCost);
+    .toSorted((a, b) => a.estimatedCost - b.estimatedCost);
 }
 
 // ─── Cost Estimation (pre-flight) ───────────────────────────────────────────
@@ -242,10 +234,7 @@ export function computeActualCost(
  * Check whether a cost estimate would exceed the remaining budget.
  * Returns true if the estimate would blow the budget.
  */
-export function wouldExceedBudget(
-  estimate: CostEstimate,
-  remaining: number,
-): boolean {
+export function wouldExceedBudget(estimate: CostEstimate, remaining: number): boolean {
   return estimate.estimatedCost > remaining;
 }
 
@@ -259,11 +248,7 @@ export function cheapestModelWithinBudget(
   estimatedOutputTokens: number,
   remainingBudget: number,
 ): ModelCostProfile | null {
-  const ranked = listModelsByCost(
-    complexity,
-    estimatedInputTokens,
-    estimatedOutputTokens,
-  );
+  const ranked = listModelsByCost(complexity, estimatedInputTokens, estimatedOutputTokens);
 
   for (const { profile, estimatedCost } of ranked) {
     if (estimatedCost <= remainingBudget) {

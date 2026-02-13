@@ -5,9 +5,7 @@
  * Supports citations, search recency filtering, and domain filtering.
  */
 
-import { BaseProvider, type ChatRequest, type ChatResponse } from "./base.js";
-import { ProviderError } from "../utils/errors.js";
-import { uid } from "../utils/helpers.js";
+import type { ClassifiedQuery } from "../types.js";
 import {
   PERPLEXITY_BASE_URL,
   PERPLEXITY_MODELS,
@@ -15,11 +13,13 @@ import {
   formatCitations,
   suggestRecencyFilter,
 } from "../perplexity-provider.js";
-import type { ClassifiedQuery } from "../types.js";
+import { ProviderError } from "../utils/errors.js";
+import { uid } from "../utils/helpers.js";
+import { BaseProvider, type ChatRequest, type ChatResponse } from "./base.js";
 
 const MODEL_PRICES: Record<string, { input: number; output: number; perRequest: number }> = {
-  sonar:                { input: 0.001, output: 0.001, perRequest: 0.005 },
-  "sonar-pro":          { input: 0.003, output: 0.015, perRequest: 0.005 },
+  sonar: { input: 0.001, output: 0.001, perRequest: 0.005 },
+  "sonar-pro": { input: 0.003, output: 0.015, perRequest: 0.005 },
   "sonar-reasoning-pro": { input: 0.002, output: 0.008, perRequest: 0.005 },
 };
 
@@ -71,7 +71,11 @@ export class PerplexityProvider extends BaseProvider {
     }
   }
 
-  protected async _chat(req: ChatRequest, model: string, opts?: Record<string, unknown>): Promise<ChatResponse> {
+  protected async _chat(
+    req: ChatRequest,
+    model: string,
+    opts?: Record<string, unknown>,
+  ): Promise<ChatResponse> {
     const messages: Array<{ role: string; content: string }> = [];
 
     if (req.systemPrompt) {
@@ -88,7 +92,7 @@ export class PerplexityProvider extends BaseProvider {
       max_tokens: req.maxTokens ?? 2048,
       temperature: req.temperature ?? 0.7,
       return_citations: true,
-      ...(opts ?? {}),
+      ...opts,
     };
 
     const res = await fetch(`${this.baseUrl}/chat/completions`, {

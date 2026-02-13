@@ -1,14 +1,7 @@
+import { CheckCircle2, XCircle, Zap, Settings, Activity, FileText } from "lucide-react";
 import { useState } from "react";
-import {
-  CheckCircle2,
-  XCircle,
-  Zap,
-  Settings,
-  Activity,
-  FileText,
-} from "lucide-react";
-import { useDashboardStore } from "../store/dashboard";
 import { ChartCard } from "../components/ChartCard";
+import { useDashboardStore } from "../store/dashboard";
 
 const PROVIDER_COLORS: Record<string, string> = {
   perplexity: "#6366F1",
@@ -30,7 +23,9 @@ export function ProvidersPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-xl font-bold text-text">Provider Status & Configuration</h1>
-        <p className="text-sm text-text-muted mt-1">Health, latency, and model management per provider</p>
+        <p className="text-sm text-text-muted mt-1">
+          Health, latency, and model management per provider
+        </p>
       </div>
 
       {/* Provider cards */}
@@ -73,8 +68,12 @@ export function ProvidersPage() {
                       )}
                     </div>
                     <div className="flex items-center gap-4 mt-1 text-xs text-text-muted">
-                      <span className="font-mono">Latency: <span className="text-text">{p.latencyMs}ms</span></span>
-                      <span className="font-mono">Success: <span className="text-text">{p.successRate}%</span></span>
+                      <span className="font-mono">
+                        Latency: <span className="text-text">{p.latencyMs}ms</span>
+                      </span>
+                      <span className="font-mono">
+                        Success: <span className="text-text">{p.successRate}%</span>
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -82,7 +81,9 @@ export function ProvidersPage() {
                 <div className="flex items-center gap-4">
                   <div className="text-right hidden sm:block">
                     <p className="text-xs text-text-dim">Today</p>
-                    <p className="text-sm font-mono font-bold text-text">${p.todayCost.toFixed(2)}</p>
+                    <p className="text-sm font-mono font-bold text-text">
+                      ${p.todayCost.toFixed(2)}
+                    </p>
                   </div>
                   <div className="text-right hidden sm:block">
                     <p className="text-xs text-text-dim">Month</p>
@@ -108,7 +109,9 @@ export function ProvidersPage() {
                 <div className="px-5 pb-5 pt-0 border-t border-border/30 animate-fade-in-up">
                   {/* Models list */}
                   <div className="mt-4">
-                    <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">Models</h4>
+                    <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider mb-3">
+                      Models
+                    </h4>
                     <div className="flex flex-wrap gap-2">
                       {p.models.map((m) => (
                         <div
@@ -133,7 +136,9 @@ export function ProvidersPage() {
                   {/* Usage bar */}
                   <div className="mt-4">
                     <div className="flex items-center justify-between mb-1">
-                      <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider">Monthly Budget</h4>
+                      <h4 className="text-xs font-semibold text-text-muted uppercase tracking-wider">
+                        Monthly Budget
+                      </h4>
                       <span className="text-xs font-mono text-text-muted">
                         {Math.round((p.monthCost / p.monthLimit) * 100)}% used
                       </span>
@@ -193,7 +198,9 @@ export function ProvidersPage() {
                   </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-text-muted">Active Models</span>
-                    <span className="font-mono text-text">{p.models.filter((m) => m.active).length}/{p.models.length}</span>
+                    <span className="font-mono text-text">
+                      {p.models.filter((m) => m.active).length}/{p.models.length}
+                    </span>
                   </div>
                   <div className="flex justify-between text-xs">
                     <span className="text-text-muted">Month Spend</span>

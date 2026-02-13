@@ -3,9 +3,9 @@
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
-import { QualityEstimator, getQualityEstimator } from "./quality-estimator.js";
 import type { ChatResponse } from "./providers/base.js";
 import type { ClassifiedQuery } from "./types.js";
+import { QualityEstimator, getQualityEstimator } from "./quality-estimator.js";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -25,7 +25,8 @@ function makeQuery(overrides: Partial<ClassifiedQuery> = {}): ClassifiedQuery {
 function makeResponse(overrides: Partial<ChatResponse> = {}): ChatResponse {
   return {
     id: "test-1",
-    content: "This is a well-structured response.\n\nAccording to research, the answer is clear. Studies demonstrate that the approach is proven.\n\n- First point\n- Second point\n- Third point",
+    content:
+      "This is a well-structured response.\n\nAccording to research, the answer is clear. Studies demonstrate that the approach is proven.\n\n- First point\n- Second point\n- Third point",
     provider: "perplexity",
     model: "sonar",
     tokens: { input: 50, output: 200, total: 250 },
@@ -86,24 +87,21 @@ describe("QualityEstimator", () => {
   describe("citation quality", () => {
     it("gives highest score for 2-5 citations", () => {
       const r1 = estimator.estimate(
-        makeResponse({ citations: [
-          { url: "https://a.com" }, { url: "https://b.com" }, { url: "https://c.com" },
-        ] }),
+        makeResponse({
+          citations: [{ url: "https://a.com" }, { url: "https://b.com" }, { url: "https://c.com" }],
+        }),
         makeQuery(),
       );
-      const r2 = estimator.estimate(
-        makeResponse({ citations: [] }),
-        makeQuery(),
-      );
-      const citeSig1 = r1.signals.find(s => s.name === "citationQuality")!;
-      const citeSig2 = r2.signals.find(s => s.name === "citationQuality")!;
+      const r2 = estimator.estimate(makeResponse({ citations: [] }), makeQuery());
+      const citeSig1 = r1.signals.find((s) => s.name === "citationQuality")!;
+      const citeSig2 = r2.signals.find((s) => s.name === "citationQuality")!;
       expect(citeSig1.score).toBeGreaterThan(citeSig2.score);
     });
 
     it("penalizes too many citations (lack of synthesis)", () => {
       const many = Array.from({ length: 12 }, (_, i) => ({ url: `https://site${i}.com` }));
       const report = estimator.estimate(makeResponse({ citations: many }), makeQuery());
-      const citeSig = report.signals.find(s => s.name === "citationQuality")!;
+      const citeSig = report.signals.find((s) => s.name === "citationQuality")!;
       expect(citeSig.score).toBeLessThan(8);
     });
   });
@@ -111,19 +109,21 @@ describe("QualityEstimator", () => {
   describe("confidence language", () => {
     it("detects high-confidence language", () => {
       const response = makeResponse({
-        content: "Research shows that the evidence is clear. Studies demonstrate this is proven according to the data.",
+        content:
+          "Research shows that the evidence is clear. Studies demonstrate this is proven according to the data.",
       });
       const report = estimator.estimate(response, makeQuery());
-      const confSig = report.signals.find(s => s.name === "confidenceLanguage")!;
+      const confSig = report.signals.find((s) => s.name === "confidenceLanguage")!;
       expect(confSig.score).toBeGreaterThanOrEqual(7);
     });
 
     it("detects hedging language", () => {
       const response = makeResponse({
-        content: "I'm not sure, but perhaps it could be something. It's unclear and I think possibly it might work.",
+        content:
+          "I'm not sure, but perhaps it could be something. It's unclear and I think possibly it might work.",
       });
       const report = estimator.estimate(response, makeQuery());
-      const confSig = report.signals.find(s => s.name === "confidenceLanguage")!;
+      const confSig = report.signals.find((s) => s.name === "confidenceLanguage")!;
       expect(confSig.score).toBeLessThan(6);
     });
 
@@ -132,7 +132,7 @@ describe("QualityEstimator", () => {
         content: "I'm unable to help you with that. As an AI, I don't have the ability to do this.",
       });
       const report = estimator.estimate(response, makeQuery());
-      const confSig = report.signals.find(s => s.name === "confidenceLanguage")!;
+      const confSig = report.signals.find((s) => s.name === "confidenceLanguage")!;
       expect(confSig.score).toBeLessThanOrEqual(1);
     });
   });
@@ -140,12 +140,13 @@ describe("QualityEstimator", () => {
   describe("structural completeness", () => {
     it("rewards structured complex responses", () => {
       const response = makeResponse({
-        content: "## Overview\n\nThis is a detailed analysis.\n\n### Key Points\n\n- **Point 1**: Important detail\n- **Point 2**: Another detail\n\n```typescript\nconst x = 1;\n```\n\nIn conclusion, the approach is solid.",
+        content:
+          "## Overview\n\nThis is a detailed analysis.\n\n### Key Points\n\n- **Point 1**: Important detail\n- **Point 2**: Another detail\n\n```typescript\nconst x = 1;\n```\n\nIn conclusion, the approach is solid.",
         tokens: { input: 50, output: 500, total: 550 },
       });
       const query = makeQuery({ complexity: "complex", intent: "code" });
       const report = estimator.estimate(response, query);
-      const structSig = report.signals.find(s => s.name === "structuralCompleteness")!;
+      const structSig = report.signals.find((s) => s.name === "structuralCompleteness")!;
       expect(structSig.score).toBeGreaterThanOrEqual(7);
     });
 
@@ -156,7 +157,7 @@ describe("QualityEstimator", () => {
       });
       const query = makeQuery({ complexity: "simple" });
       const report = estimator.estimate(response, query);
-      const structSig = report.signals.find(s => s.name === "structuralCompleteness")!;
+      const structSig = report.signals.find((s) => s.name === "structuralCompleteness")!;
       expect(structSig.score).toBeGreaterThanOrEqual(5);
     });
   });
@@ -168,7 +169,7 @@ describe("QualityEstimator", () => {
       });
       const query = makeQuery({ complexity: "complex" });
       const report = estimator.estimate(response, query);
-      const lenSig = report.signals.find(s => s.name === "lengthAppropriateness")!;
+      const lenSig = report.signals.find((s) => s.name === "lengthAppropriateness")!;
       expect(lenSig.score).toBeLessThan(7);
     });
 
@@ -178,7 +179,7 @@ describe("QualityEstimator", () => {
       });
       const query = makeQuery({ complexity: "simple" });
       const report = estimator.estimate(response, query);
-      const lenSig = report.signals.find(s => s.name === "lengthAppropriateness")!;
+      const lenSig = report.signals.find((s) => s.name === "lengthAppropriateness")!;
       expect(lenSig.score).toBeGreaterThanOrEqual(7);
     });
   });

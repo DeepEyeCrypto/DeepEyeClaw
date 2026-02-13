@@ -1,4 +1,3 @@
-import { NavLink, Outlet } from "react-router-dom";
 import {
   LayoutDashboard,
   BarChart3,
@@ -9,6 +8,7 @@ import {
   RefreshCw,
   Octagon,
 } from "lucide-react";
+import { NavLink, Outlet } from "react-router-dom";
 import { useDashboardStore } from "../store/dashboard";
 
 const NAV_ITEMS = [
@@ -37,7 +37,9 @@ export function Layout() {
           </div>
           {sidebarOpen && (
             <div className="animate-fade-in-up">
-              <h1 className="text-sm font-bold text-text leading-none tracking-tight">DeepEyeClaw</h1>
+              <h1 className="text-sm font-bold text-text leading-none tracking-tight">
+                DeepEyeClaw
+              </h1>
               <p className="text-[10px] text-text-muted mt-0.5 font-mono">v2.0 — GATEWAY</p>
             </div>
           )}
@@ -87,14 +89,36 @@ export function Layout() {
             {(() => {
               const status = useDashboardStore.getState().connectionStatus;
               const colors = {
-                connected: { bg: "bg-secondary/10", border: "border-secondary/20", dot: "bg-secondary", text: "text-secondary", label: "Live" },
-                disconnected: { bg: "bg-danger/10", border: "border-danger/20", dot: "bg-danger", text: "text-danger", label: "Offline" },
-                mock: { bg: "bg-info/10", border: "border-info/20", dot: "bg-info", text: "text-info", label: "Mock" },
+                connected: {
+                  bg: "bg-secondary/10",
+                  border: "border-secondary/20",
+                  dot: "bg-secondary",
+                  text: "text-secondary",
+                  label: "Live",
+                },
+                disconnected: {
+                  bg: "bg-danger/10",
+                  border: "border-danger/20",
+                  dot: "bg-danger",
+                  text: "text-danger",
+                  label: "Offline",
+                },
+                mock: {
+                  bg: "bg-info/10",
+                  border: "border-info/20",
+                  dot: "bg-info",
+                  text: "text-info",
+                  label: "Mock",
+                },
               };
               const c = colors[status];
               return (
-                <div className={`flex items-center gap-2 px-3 py-1 rounded-full ${c.bg} border ${c.border}`}>
-                  <span className={`w-2 h-2 rounded-full ${c.dot} ${status === "connected" ? "animate-pulse" : ""}`} />
+                <div
+                  className={`flex items-center gap-2 px-3 py-1 rounded-full ${c.bg} border ${c.border}`}
+                >
+                  <span
+                    className={`w-2 h-2 rounded-full ${c.dot} ${status === "connected" ? "animate-pulse" : ""}`}
+                  />
                   <span className={`text-xs font-medium ${c.text}`}>{c.label}</span>
                 </div>
               );

@@ -125,9 +125,7 @@ describe("Prometheus Metrics", () => {
 
     const val = await cascadeEscalations.get();
     const found = val.values.find(
-      (v) =>
-        v.labels.from_provider === "perplexity" &&
-        v.labels.to_provider === "openai",
+      (v) => v.labels.from_provider === "perplexity" && v.labels.to_provider === "openai",
     );
     expect(found?.value).toBe(1);
   });
@@ -151,10 +149,7 @@ describe("Prometheus Metrics", () => {
   });
 
   it("updateBudgetMetrics in emergency mode sets gauge to 1", async () => {
-    updateBudgetMetrics(
-      [{ period: "daily", remaining: 0.1, percentUsed: 98 }],
-      true,
-    );
+    updateBudgetMetrics([{ period: "daily", remaining: 0.1, percentUsed: 98 }], true);
 
     const emergencyVal = await emergencyModeGauge.get();
     expect(emergencyVal.values[0]?.value).toBe(1);

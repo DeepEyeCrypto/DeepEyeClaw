@@ -10,11 +10,11 @@
 export type QueryComplexity = "simple" | "medium" | "complex";
 
 export type QueryIntent =
-  | "search"      // Needs web search / real-time data
-  | "reasoning"   // Deep analysis, multi-step logic
-  | "chat"        // Simple conversation / Q&A
-  | "creative"    // Content generation, writing
-  | "code";       // Programming tasks
+  | "search" // Needs web search / real-time data
+  | "reasoning" // Deep analysis, multi-step logic
+  | "chat" // Simple conversation / Q&A
+  | "creative" // Content generation, writing
+  | "code"; // Programming tasks
 
 export type ClassifiedQuery = {
   text: string;

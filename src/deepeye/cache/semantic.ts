@@ -11,11 +11,11 @@
  *   4. Otherwise → cache miss
  */
 
-import type { CacheEntry, CacheStats, ProviderName } from "../types.js";
 import type { ChatResponse } from "../providers/base.js";
+import type { CacheEntry, CacheStats, ProviderName } from "../types.js";
 import { CacheError } from "../utils/errors.js";
-import { childLogger } from "../utils/logger.js";
 import { hashString, uid } from "../utils/helpers.js";
+import { childLogger } from "../utils/logger.js";
 
 const log = childLogger("cache");
 
@@ -36,7 +36,9 @@ function buildVocab(docs: string[]): Map<string, number> {
   let idx = 0;
   for (const doc of docs) {
     for (const tok of tokenize(doc)) {
-      if (!vocab.has(tok)) vocab.set(tok, idx++);
+      if (!vocab.has(tok)) {
+        vocab.set(tok, idx++);
+      }
     }
   }
   return vocab;
@@ -46,14 +48,20 @@ function toVector(text: string, vocab: Map<string, number>): number[] {
   const vec = new Array(vocab.size).fill(0);
   for (const tok of tokenize(text)) {
     const i = vocab.get(tok);
-    if (i !== undefined) vec[i]++;
+    if (i !== undefined) {
+      vec[i]++;
+    }
   }
   return vec;
 }
 
 function cosineSimilarity(a: number[], b: number[]): number {
-  if (a.length !== b.length || a.length === 0) return 0;
-  let dot = 0, magA = 0, magB = 0;
+  if (a.length !== b.length || a.length === 0) {
+    return 0;
+  }
+  let dot = 0,
+    magA = 0,
+    magB = 0;
   for (let i = 0; i < a.length; i++) {
     dot += a[i] * b[i];
     magA += a[i] * a[i];
@@ -87,7 +95,7 @@ const DEFAULT_CONFIG: SemanticCacheConfig = {
   maxEntries: 1000,
   similarityThreshold: 0.82,
   defaultTtlMs: 3_600_000, // 1 hour
-  realtimeTtlMs: 60_000,   // 1 minute
+  realtimeTtlMs: 60_000, // 1 minute
 };
 
 export class SemanticCache {
@@ -175,11 +183,7 @@ export class SemanticCache {
   /**
    * Store a response in the cache.
    */
-  async store(
-    query: string,
-    response: ChatResponse,
-    ttlMs?: number,
-  ): Promise<void> {
+  async store(query: string, response: ChatResponse, ttlMs?: number): Promise<void> {
     const hash = await hashString(query);
     const ttl = ttlMs ?? this.config.defaultTtlMs;
 
@@ -221,14 +225,18 @@ export class SemanticCache {
     }
 
     this.stats.totalEntries = await this.adapter.size();
-    if (pruned > 0) log.info("pruned expired", { count: pruned });
+    if (pruned > 0) {
+      log.info("pruned expired", { count: pruned });
+    }
     return pruned;
   }
 
   /** Evict the oldest / least-hit entry. */
   private async evictOldest(): Promise<void> {
     const all = await this.adapter.entries();
-    if (all.length === 0) return;
+    if (all.length === 0) {
+      return;
+    }
 
     // Sort by hitCount ASC, then createdAt ASC — evict least valuable first
     all.sort((a, b) => a.hitCount - b.hitCount || a.createdAt - b.createdAt);

@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import {
   DollarSign,
   BarChart3,
@@ -10,6 +9,7 @@ import {
   Info,
   XCircle,
 } from "lucide-react";
+import { useMemo } from "react";
 import {
   AreaChart,
   Area,
@@ -21,13 +21,15 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { useDashboardStore } from "../store/dashboard";
-import { getCostByDay, getProviderDistribution } from "../data/mock";
-import { StatCard } from "../components/StatCard";
 import { ChartCard } from "../components/ChartCard";
+import { StatCard } from "../components/StatCard";
+import { getCostByDay, getProviderDistribution } from "../data/mock";
+import { useDashboardStore } from "../store/dashboard";
 
 function CustomTooltip({ active, payload, label }: any) {
-  if (!active || !payload?.length) return null;
+  if (!active || !payload?.length) {
+    return null;
+  }
   return (
     <div className="bg-surface border border-border rounded-xl px-4 py-3 shadow-xl">
       <p className="text-xs font-semibold text-text mb-2">{label}</p>
@@ -43,7 +45,9 @@ function CustomTooltip({ active, payload, label }: any) {
 }
 
 function PieTooltip({ active, payload }: any) {
-  if (!active || !payload?.length) return null;
+  if (!active || !payload?.length) {
+    return null;
+  }
   const d = payload[0];
   return (
     <div className="bg-surface border border-border rounded-xl px-4 py-2 shadow-xl">
@@ -71,8 +75,12 @@ export function DashboardPage() {
   const recentAlerts = alerts.slice(0, 5);
 
   const alertIcon = (level: string) => {
-    if (level === "error") return <XCircle size={14} className="text-danger" />;
-    if (level === "warn") return <AlertTriangle size={14} className="text-warning" />;
+    if (level === "error") {
+      return <XCircle size={14} className="text-danger" />;
+    }
+    if (level === "warn") {
+      return <AlertTriangle size={14} className="text-warning" />;
+    }
     return <Info size={14} className="text-info" />;
   };
 
@@ -81,7 +89,9 @@ export function DashboardPage() {
       {/* Page title */}
       <div>
         <h1 className="text-xl font-bold text-text">Overview</h1>
-        <p className="text-sm text-text-muted mt-1">Real-time gateway performance & cost tracking</p>
+        <p className="text-sm text-text-muted mt-1">
+          Real-time gateway performance & cost tracking
+        </p>
       </div>
 
       {/* Stat cards */}
@@ -148,9 +158,27 @@ export function DashboardPage() {
                 <XAxis dataKey="date" axisLine={false} tickLine={false} />
                 <YAxis axisLine={false} tickLine={false} tickFormatter={(v) => `$${v}`} />
                 <Tooltip content={<CustomTooltip />} />
-                <Area type="monotone" dataKey="perplexity" stroke="#6366F1" fill="url(#gPerplexity)" strokeWidth={2} />
-                <Area type="monotone" dataKey="openai" stroke="#10B981" fill="url(#gOpenAI)" strokeWidth={2} />
-                <Area type="monotone" dataKey="anthropic" stroke="#F59E0B" fill="url(#gAnthropic)" strokeWidth={2} />
+                <Area
+                  type="monotone"
+                  dataKey="perplexity"
+                  stroke="#6366F1"
+                  fill="url(#gPerplexity)"
+                  strokeWidth={2}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="openai"
+                  stroke="#10B981"
+                  fill="url(#gOpenAI)"
+                  strokeWidth={2}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="anthropic"
+                  stroke="#F59E0B"
+                  fill="url(#gAnthropic)"
+                  strokeWidth={2}
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -202,7 +230,9 @@ export function DashboardPage() {
               >
                 <div className="shrink-0 mt-1">
                   {e.cacheHit ? (
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-info/10 text-info text-[10px] font-mono font-bold">CACHE</span>
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-info/10 text-info text-[10px] font-mono font-bold">
+                      CACHE
+                    </span>
                   ) : (
                     <Clock size={12} className="text-text-dim" />
                   )}
@@ -224,10 +254,18 @@ export function DashboardPage() {
                       Cost: <span className="text-text-muted">${e.cost.toFixed(4)}</span>
                     </span>
                     <span className="text-[10px] font-mono text-text-dim">
-                      Tokens: <span className="text-text-muted">{(e.inputTokens + e.outputTokens).toLocaleString()}</span>
+                      Tokens:{" "}
+                      <span className="text-text-muted">
+                        {(e.inputTokens + e.outputTokens).toLocaleString()}
+                      </span>
                     </span>
                     <span className="text-[10px] font-mono text-text-dim">
-                      Time: <span className="text-text-muted">{e.responseTimeMs < 1000 ? `${Math.round(e.responseTimeMs)}ms` : `${(e.responseTimeMs / 1000).toFixed(1)}s`}</span>
+                      Time:{" "}
+                      <span className="text-text-muted">
+                        {e.responseTimeMs < 1000
+                          ? `${Math.round(e.responseTimeMs)}ms`
+                          : `${(e.responseTimeMs / 1000).toFixed(1)}s`}
+                      </span>
                     </span>
                   </div>
                 </div>
@@ -249,7 +287,9 @@ export function DashboardPage() {
                 <div className="flex-1">
                   <p className="text-xs text-text">{a.message}</p>
                   <div className="flex items-center gap-2 mt-1.5">
-                    <span className="text-[10px] font-mono text-text-dim">{formatTimeAgo(a.timestamp)}</span>
+                    <span className="text-[10px] font-mono text-text-dim">
+                      {formatTimeAgo(a.timestamp)}
+                    </span>
                     {a.resolved && (
                       <span className="inline-flex items-center gap-1 text-[10px] text-secondary">
                         <CheckCircle2 size={10} /> Resolved
@@ -269,11 +309,17 @@ export function DashboardPage() {
 function formatTimeAgo(timestamp: number): string {
   const diff = Date.now() - timestamp;
   const seconds = Math.floor(diff / 1000);
-  if (seconds < 60) return `${seconds}s ago`;
+  if (seconds < 60) {
+    return `${seconds}s ago`;
+  }
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
+  if (minutes < 60) {
+    return `${minutes}m ago`;
+  }
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) {
+    return `${hours}h ago`;
+  }
   const days = Math.floor(hours / 24);
   return `${days}d ago`;
 }

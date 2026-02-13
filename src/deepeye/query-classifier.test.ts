@@ -21,7 +21,9 @@ describe("classifyQuery", () => {
     });
 
     it("classifies medium how-to questions", () => {
-      const result = classifyQuery("How to set up a Node.js server with Express and handle authentication?");
+      const result = classifyQuery(
+        "How to set up a Node.js server with Express and handle authentication?",
+      );
       expect(result.complexity).toBe("medium");
     });
 
@@ -53,7 +55,9 @@ describe("classifyQuery", () => {
     });
 
     it("detects reasoning intent", () => {
-      const result = classifyQuery("Calculate the probability of drawing 3 aces from a deck of cards");
+      const result = classifyQuery(
+        "Calculate the probability of drawing 3 aces from a deck of cards",
+      );
       expect(result.intent).toBe("reasoning");
     });
 
@@ -106,7 +110,9 @@ describe("classifyQuery", () => {
 
     it("estimates more tokens for longer text", () => {
       const short = classifyQuery("Hi");
-      const long = classifyQuery("This is a much longer query that should result in more estimated tokens because it contains many words");
+      const long = classifyQuery(
+        "This is a much longer query that should result in more estimated tokens because it contains many words",
+      );
       expect(long.estimatedTokens).toBeGreaterThan(short.estimatedTokens);
     });
   });

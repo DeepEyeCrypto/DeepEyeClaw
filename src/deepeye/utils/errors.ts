@@ -41,7 +41,12 @@ export class ProviderError extends DeepEyeClawError {
   constructor(
     provider: string,
     message: string,
-    opts: { code?: string; statusCode?: number; model?: string; details?: Record<string, unknown> } = {},
+    opts: {
+      code?: string;
+      statusCode?: number;
+      model?: string;
+      details?: Record<string, unknown>;
+    } = {},
   ) {
     super(
       `[${provider}] ${message}`,
@@ -85,12 +90,7 @@ export class RateLimitError extends DeepEyeClawError {
   readonly retryAfterMs: number;
 
   constructor(retryAfterMs: number) {
-    super(
-      `Rate limited. Retry after ${retryAfterMs}ms`,
-      "RATE_LIMITED",
-      429,
-      { retryAfterMs },
-    );
+    super(`Rate limited. Retry after ${retryAfterMs}ms`, "RATE_LIMITED", 429, { retryAfterMs });
     this.name = "RateLimitError";
     this.retryAfterMs = retryAfterMs;
   }

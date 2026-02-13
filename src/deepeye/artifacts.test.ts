@@ -3,9 +3,9 @@
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
-import { ArtifactManager, resetArtifactManager, getArtifactManager } from "./artifacts.js";
-import type { ClassifiedQuery, RoutingDecision } from "./types.js";
 import type { ChatResponse } from "./providers/base.js";
+import type { ClassifiedQuery, RoutingDecision } from "./types.js";
+import { ArtifactManager, resetArtifactManager, getArtifactManager } from "./artifacts.js";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -200,7 +200,15 @@ describe("ArtifactManager", () => {
 
     it("filters by query ID", () => {
       manager.recordRouteDecision({ queryId: "x", query: makeQuery(), decision: makeDecision() });
-      manager.recordCacheHit({ queryId: "x", query: makeQuery(), similarity: 0.9, savedCost: 0, savedLatencyMs: 0, provider: "p", model: "m" });
+      manager.recordCacheHit({
+        queryId: "x",
+        query: makeQuery(),
+        similarity: 0.9,
+        savedCost: 0,
+        savedLatencyMs: 0,
+        provider: "p",
+        model: "m",
+      });
       manager.recordRouteDecision({ queryId: "y", query: makeQuery(), decision: makeDecision() });
 
       const forX = manager.getByQueryId("x");
@@ -209,15 +217,31 @@ describe("ArtifactManager", () => {
 
     it("filters by type", () => {
       manager.recordRouteDecision({ queryId: "a", query: makeQuery(), decision: makeDecision() });
-      manager.recordCacheHit({ queryId: "b", query: makeQuery(), similarity: 0.9, savedCost: 0, savedLatencyMs: 0, provider: "p", model: "m" });
+      manager.recordCacheHit({
+        queryId: "b",
+        query: makeQuery(),
+        similarity: 0.9,
+        savedCost: 0,
+        savedLatencyMs: 0,
+        provider: "p",
+        model: "m",
+      });
 
       const cacheHits = manager.getByType("cache_hit");
       expect(cacheHits).toHaveLength(1);
     });
 
     it("filters by tag", () => {
-      manager.recordRouteDecision({ queryId: "a", query: makeQuery({ complexity: "simple" }), decision: makeDecision() });
-      manager.recordRouteDecision({ queryId: "b", query: makeQuery({ complexity: "complex" }), decision: makeDecision() });
+      manager.recordRouteDecision({
+        queryId: "a",
+        query: makeQuery({ complexity: "simple" }),
+        decision: makeDecision(),
+      });
+      manager.recordRouteDecision({
+        queryId: "b",
+        query: makeQuery({ complexity: "complex" }),
+        decision: makeDecision(),
+      });
 
       const complex = manager.getByTag("complex");
       expect(complex).toHaveLength(1);
@@ -227,7 +251,15 @@ describe("ArtifactManager", () => {
   describe("summary", () => {
     it("returns summary statistics", () => {
       manager.recordRouteDecision({ queryId: "a", query: makeQuery(), decision: makeDecision() });
-      manager.recordCacheHit({ queryId: "b", query: makeQuery(), similarity: 0.9, savedCost: 0.005, savedLatencyMs: 0, provider: "p", model: "m" });
+      manager.recordCacheHit({
+        queryId: "b",
+        query: makeQuery(),
+        similarity: 0.9,
+        savedCost: 0.005,
+        savedLatencyMs: 0,
+        provider: "p",
+        model: "m",
+      });
 
       const summary = manager.getSummary();
       expect(summary.totalArtifacts).toBe(2);
@@ -239,7 +271,11 @@ describe("ArtifactManager", () => {
   describe("capacity", () => {
     it("caps artifacts at maxArtifacts", () => {
       for (let i = 0; i < 120; i++) {
-        manager.recordRouteDecision({ queryId: `q${i}`, query: makeQuery(), decision: makeDecision() });
+        manager.recordRouteDecision({
+          queryId: `q${i}`,
+          query: makeQuery(),
+          decision: makeDecision(),
+        });
       }
       expect(manager.size).toBeLessThanOrEqual(100);
     });

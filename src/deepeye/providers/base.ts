@@ -7,12 +7,12 @@
  *   getHealth() → check provider health
  */
 
+import type { Logger } from "winston";
 import { EventEmitter } from "node:events";
 import type { ProviderName, ActualCost } from "../types.js";
 import { ProviderError } from "../utils/errors.js";
-import { childLogger } from "../utils/logger.js";
 import { uid, startTimer, backoffMs, sleep } from "../utils/helpers.js";
-import type { Logger } from "winston";
+import { childLogger } from "../utils/logger.js";
 
 // ── Shared interfaces ───────────────────────────────────────────────────────
 
@@ -73,7 +73,11 @@ export abstract class BaseProvider extends EventEmitter {
    * Subclasses implement `_chat()`, this wrapper adds timing, retries, and
    * health-tracking.
    */
-  async chat(req: ChatRequest, model: string, opts?: Record<string, unknown>): Promise<ChatResponse> {
+  async chat(
+    req: ChatRequest,
+    model: string,
+    opts?: Record<string, unknown>,
+  ): Promise<ChatResponse> {
     const requestId = req.id ?? uid();
     const elapsed = startTimer();
 
@@ -112,7 +116,11 @@ export abstract class BaseProvider extends EventEmitter {
   }
 
   /** Subclass implements the actual API call here. */
-  protected abstract _chat(req: ChatRequest, model: string, opts?: Record<string, unknown>): Promise<ChatResponse>;
+  protected abstract _chat(
+    req: ChatRequest,
+    model: string,
+    opts?: Record<string, unknown>,
+  ): Promise<ChatResponse>;
 
   /** Return available model names. */
   abstract getAvailableModels(): string[];

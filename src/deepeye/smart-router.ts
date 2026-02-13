@@ -19,16 +19,14 @@ import type {
   RoutingDecision,
   RoutingStrategy,
 } from "./types.js";
+import { getBudgetTracker } from "./budget-tracker.js";
 import {
   estimateCost,
   estimateOutputTokens,
   listModelsByCost,
   cheapestModelWithinBudget,
 } from "./cost-calculator.js";
-import {
-  selectPerplexityModel,
-} from "./perplexity-provider.js";
-import { getBudgetTracker } from "./budget-tracker.js";
+import { selectPerplexityModel } from "./perplexity-provider.js";
 
 // ─── Default Cascade Chains ─────────────────────────────────────────────────
 
@@ -46,32 +44,44 @@ const MEDIUM_CASCADE: CascadeStep[] = [
 const COMPLEX_CASCADE: CascadeStep[] = [
   { provider: "perplexity", model: "sonar-reasoning-pro", qualityThreshold: 8, maxCost: 0.05 },
   { provider: "openai", model: "gpt-4o", qualityThreshold: 9, maxCost: 0.15 },
-  { provider: "anthropic", model: "claude-sonnet-4-5", qualityThreshold: 9.5, maxCost: 0.30 },
+  { provider: "anthropic", model: "claude-sonnet-4-5", qualityThreshold: 9.5, maxCost: 0.3 },
 ];
 
 function getCascadeChain(query: ClassifiedQuery): CascadeStep[] {
   // Real-time always starts with Perplexity.
   if (query.isRealtime) {
     return [
-      { provider: "perplexity", model: selectPerplexityModel({
-        isRealtime: true,
-        needsReasoning: query.intent === "reasoning",
-        needsDeepSearch: query.complexity !== "simple",
-      }), qualityThreshold: 7, maxCost: 0.02 },
+      {
+        provider: "perplexity",
+        model: selectPerplexityModel({
+          isRealtime: true,
+          needsReasoning: query.intent === "reasoning",
+          needsDeepSearch: query.complexity !== "simple",
+        }),
+        qualityThreshold: 7,
+        maxCost: 0.02,
+      },
       ...MEDIUM_CASCADE.slice(1),
     ];
   }
 
   switch (query.complexity) {
-    case "simple": return SIMPLE_CASCADE;
-    case "medium": return MEDIUM_CASCADE;
-    case "complex": return COMPLEX_CASCADE;
+    case "simple":
+      return SIMPLE_CASCADE;
+    case "medium":
+      return MEDIUM_CASCADE;
+    case "complex":
+      return COMPLEX_CASCADE;
   }
 }
 
 // ─── Strategy Implementations ───────────────────────────────────────────────
 
-function routePriority(query: ClassifiedQuery): { provider: ProviderName; model: string; reason: string } {
+function routePriority(query: ClassifiedQuery): {
+  provider: ProviderName;
+  model: string;
+  reason: string;
+} {
   // Search/real-time → Perplexity always.
   if (query.isRealtime || query.intent === "search") {
     const model = selectPerplexityModel({
@@ -85,15 +95,27 @@ function routePriority(query: ClassifiedQuery): { provider: ProviderName; model:
   // Reasoning → Perplexity Reasoning Pro or Claude.
   if (query.intent === "reasoning") {
     if (query.complexity === "complex") {
-      return { provider: "anthropic", model: "claude-sonnet-4-5", reason: "Complex reasoning → Claude Sonnet 4.5" };
+      return {
+        provider: "anthropic",
+        model: "claude-sonnet-4-5",
+        reason: "Complex reasoning → Claude Sonnet 4.5",
+      };
     }
-    return { provider: "perplexity", model: "sonar-reasoning-pro", reason: "Reasoning → Perplexity Sonar Reasoning Pro" };
+    return {
+      provider: "perplexity",
+      model: "sonar-reasoning-pro",
+      reason: "Reasoning → Perplexity Sonar Reasoning Pro",
+    };
   }
 
   // Code → Claude or GPT-4o (best code models).
   if (query.intent === "code") {
     if (query.complexity === "complex") {
-      return { provider: "anthropic", model: "claude-sonnet-4-5", reason: "Complex code → Claude Sonnet 4.5" };
+      return {
+        provider: "anthropic",
+        model: "claude-sonnet-4-5",
+        reason: "Complex code → Claude Sonnet 4.5",
+      };
     }
     return { provider: "openai", model: "gpt-4o", reason: "Code → GPT-4o" };
   }
@@ -109,18 +131,24 @@ function routePriority(query: ClassifiedQuery): { provider: ProviderName; model:
   }
 
   // Complex → Claude.
-  return { provider: "anthropic", model: "claude-sonnet-4-5", reason: "Complex query → Claude Sonnet 4.5" };
+  return {
+    provider: "anthropic",
+    model: "claude-sonnet-4-5",
+    reason: "Complex query → Claude Sonnet 4.5",
+  };
 }
 
-function routeCostOptimized(query: ClassifiedQuery): { provider: ProviderName; model: string; reason: string } {
+function routeCostOptimized(query: ClassifiedQuery): {
+  provider: ProviderName;
+  model: string;
+  reason: string;
+} {
   const estimatedOutput = estimateOutputTokens(query.complexity, query.estimatedTokens);
   const ranked = listModelsByCost(query.complexity, query.estimatedTokens, estimatedOutput);
 
   // For real-time/search, filter to models with web_search capability.
   if (query.isRealtime || query.intent === "search") {
-    const searchCandidates = ranked.filter((r) =>
-      r.profile.capabilities.includes("web_search"),
-    );
+    const searchCandidates = ranked.filter((r) => r.profile.capabilities.includes("web_search"));
     if (searchCandidates.length > 0) {
       const best = searchCandidates[0];
       return {
@@ -141,10 +169,18 @@ function routeCostOptimized(query: ClassifiedQuery): { provider: ProviderName; m
   }
 
   // Absolute fallback.
-  return { provider: "openai", model: "gpt-4o-mini", reason: "Cost-optimized fallback → GPT-4o-mini" };
+  return {
+    provider: "openai",
+    model: "gpt-4o-mini",
+    reason: "Cost-optimized fallback → GPT-4o-mini",
+  };
 }
 
-function routeEmergency(query: ClassifiedQuery): { provider: ProviderName; model: string; reason: string } {
+function routeEmergency(query: ClassifiedQuery): {
+  provider: ProviderName;
+  model: string;
+  reason: string;
+} {
   const estimatedOutput = estimateOutputTokens(query.complexity, query.estimatedTokens);
   const budget = getBudgetTracker();
   const remaining = budget.dailyRemaining;
@@ -183,10 +219,7 @@ export type SmartRouterConfig = {
  * The main routing entry point.
  * Takes a classified query and returns a routing decision.
  */
-export function routeQuery(
-  query: ClassifiedQuery,
-  config?: SmartRouterConfig,
-): RoutingDecision {
+export function routeQuery(query: ClassifiedQuery, config?: SmartRouterConfig): RoutingDecision {
   const budget = getBudgetTracker();
   const strategy = determineStrategy(config?.strategy, budget.isEmergencyMode);
 
@@ -238,11 +271,10 @@ export function routeQuery(
   };
 }
 
-function determineStrategy(
-  configured?: RoutingStrategy,
-  isEmergency?: boolean,
-): RoutingStrategy {
-  if (isEmergency) return "emergency";
+function determineStrategy(configured?: RoutingStrategy, isEmergency?: boolean): RoutingStrategy {
+  if (isEmergency) {
+    return "emergency";
+  }
   return configured ?? "cascade";
 }
 
@@ -267,7 +299,12 @@ export async function executeCascade<T>(params: {
   chain: CascadeStep[];
   run: (provider: ProviderName, model: string) => Promise<T>;
   evaluate: (response: T) => number;
-  onStep?: (step: { provider: ProviderName; model: string; quality: number; index: number }) => void;
+  onStep?: (step: {
+    provider: ProviderName;
+    model: string;
+    quality: number;
+    index: number;
+  }) => void;
 }): Promise<CascadeResult<T>> {
   let bestResponse: T | null = null;
   let bestQuality = 0;

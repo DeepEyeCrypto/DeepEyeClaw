@@ -359,7 +359,7 @@ jobs:
         with:
           node-version: 22.x
           check-latest: true
-          cache: 'npm'
+          cache: "npm"
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2

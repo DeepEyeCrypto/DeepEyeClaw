@@ -16,15 +16,15 @@
  * Too many (>8) = lack of synthesis.
  */
 
-import type { ClassifiedQuery } from "./types.js";
 import type { ChatResponse } from "./providers/base.js";
+import type { ClassifiedQuery } from "./types.js";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 export interface QualitySignal {
   name: string;
-  score: number;   // 0–10
-  weight: number;  // 0–1
+  score: number; // 0–10
+  weight: number; // 0–1
   detail?: string;
 }
 
@@ -32,7 +32,7 @@ export interface QualityReport {
   overallScore: number;
   signals: QualitySignal[];
   grade: "A" | "B" | "C" | "D" | "F";
-  confidence: number;   // 0–1 — how confident we are in this assessment
+  confidence: number; // 0–1 — how confident we are in this assessment
   recommendation: "accept" | "escalate" | "reject";
 }
 
@@ -40,48 +40,68 @@ export interface QualityReport {
 
 const SIGNAL_WEIGHTS = {
   citationQuality: 0.25,
-  confidenceLanguage: 0.20,
-  structuralCompleteness: 0.20,
+  confidenceLanguage: 0.2,
+  structuralCompleteness: 0.2,
   lengthAppropriateness: 0.15,
-  latencyVsExpected: 0.10,
-  tokenEfficiency: 0.10,
+  latencyVsExpected: 0.1,
+  tokenEfficiency: 0.1,
 } as const;
 
 // ── Expected Response Characteristics ────────────────────────────────────────
 
 const EXPECTED_TOKENS_BY_COMPLEXITY: Record<string, { min: number; max: number; ideal: number }> = {
-  simple:  { min: 50,  max: 500,  ideal: 200  },
-  medium:  { min: 150, max: 1500, ideal: 600  },
+  simple: { min: 50, max: 500, ideal: 200 },
+  medium: { min: 150, max: 1500, ideal: 600 },
   complex: { min: 300, max: 4000, ideal: 1500 },
 };
 
 const EXPECTED_LATENCY_BY_COMPLEXITY: Record<string, number> = {
-  simple:  2000,
-  medium:  5000,
+  simple: 2000,
+  medium: 5000,
   complex: 10000,
 };
 
 // ── Confidence/Hedging Patterns ──────────────────────────────────────────────
 
 const HIGH_CONFIDENCE_PATTERNS = [
-  /\bis\b/i, /\bare\b/i, /\bshows\b/i, /\bdemonstrates\b/i,
-  /\baccording to\b/i, /\bevidence\b/i, /\bresearch\b/i,
-  /\bspecifically\b/i, /\bin conclusion\b/i, /\bproven\b/i,
-  /\bdata shows\b/i, /\bstudies\b/i, /\bconfirmed\b/i,
+  /\bis\b/i,
+  /\bare\b/i,
+  /\bshows\b/i,
+  /\bdemonstrates\b/i,
+  /\baccording to\b/i,
+  /\bevidence\b/i,
+  /\bresearch\b/i,
+  /\bspecifically\b/i,
+  /\bin conclusion\b/i,
+  /\bproven\b/i,
+  /\bdata shows\b/i,
+  /\bstudies\b/i,
+  /\bconfirmed\b/i,
 ];
 
 const LOW_CONFIDENCE_PATTERNS = [
-  /\bi('m| am) not sure\b/i, /\bi don'?t know\b/i,
-  /\bperhaps\b/i, /\bmight\b/i, /\bcould be\b/i,
-  /\bi think\b/i, /\bpossibly\b/i, /\bit'?s unclear\b/i,
-  /\bnot certain\b/i, /\bhard to say\b/i,
-  /\bi cannot\b/i, /\bi can('| )not\b/i, /\bunable to\b/i,
-  /\bdon'?t have access\b/i, /\bmay or may not\b/i,
+  /\bi('m| am) not sure\b/i,
+  /\bi don'?t know\b/i,
+  /\bperhaps\b/i,
+  /\bmight\b/i,
+  /\bcould be\b/i,
+  /\bi think\b/i,
+  /\bpossibly\b/i,
+  /\bit'?s unclear\b/i,
+  /\bnot certain\b/i,
+  /\bhard to say\b/i,
+  /\bi cannot\b/i,
+  /\bi can('| )not\b/i,
+  /\bunable to\b/i,
+  /\bdon'?t have access\b/i,
+  /\bmay or may not\b/i,
 ];
 
 const REFUSAL_PATTERNS = [
-  /\bi cannot help\b/i, /\bi'?m unable\b/i,
-  /\bas an ai\b/i, /\bi don'?t have the ability\b/i,
+  /\bi cannot help\b/i,
+  /\bi'?m unable\b/i,
+  /\bas an ai\b/i,
+  /\bi don'?t have the ability\b/i,
   /\bnot (able|equipped) to\b/i,
 ];
 
@@ -130,7 +150,9 @@ export class QualityEstimator {
       // No citations — check if provider supports them
       const supportsSearch = response.provider === "perplexity";
       score = supportsSearch ? 3.0 : 6.0; // Perplexity should have citations
-      detail = supportsSearch ? "No citations from search provider" : "No citations (non-search model)";
+      detail = supportsSearch
+        ? "No citations from search provider"
+        : "No citations (non-search model)";
     } else if (count === 1) {
       score = 6.0;
       detail = "Single citation — limited sourcing";
@@ -147,9 +169,15 @@ export class QualityEstimator {
 
     // Bonus: check citation variety (different domains)
     if (count >= 2) {
-      const domains = new Set(citations.map(c => {
-        try { return new URL(c.url).hostname; } catch { return "unknown"; }
-      }));
+      const domains = new Set(
+        citations.map((c) => {
+          try {
+            return new URL(c.url).hostname;
+          } catch {
+            return "unknown";
+          }
+        }),
+      );
       if (domains.size >= Math.min(3, count)) {
         score = Math.min(10, score + 0.5);
         detail += " (diverse sources)";
@@ -165,9 +193,9 @@ export class QualityEstimator {
     let score = 7.0; // baseline
 
     // Count confidence/hedging signals
-    const highCount = HIGH_CONFIDENCE_PATTERNS.filter(p => p.test(text)).length;
-    const lowCount = LOW_CONFIDENCE_PATTERNS.filter(p => p.test(text)).length;
-    const refusalCount = REFUSAL_PATTERNS.filter(p => p.test(text)).length;
+    const highCount = HIGH_CONFIDENCE_PATTERNS.filter((p) => p.test(text)).length;
+    const lowCount = LOW_CONFIDENCE_PATTERNS.filter((p) => p.test(text)).length;
+    const refusalCount = REFUSAL_PATTERNS.filter((p) => p.test(text)).length;
 
     // Refusal = very bad
     if (refusalCount > 0) {
@@ -187,21 +215,28 @@ export class QualityEstimator {
     score = Math.max(0, Math.min(10, score));
 
     let detail: string;
-    if (score >= 8) detail = "High confidence language";
-    else if (score >= 5) detail = "Moderate confidence";
-    else detail = `Excessive hedging (${lowCount} hedging patterns)`;
+    if (score >= 8) {
+      detail = "High confidence language";
+    } else if (score >= 5) {
+      detail = "Moderate confidence";
+    } else {
+      detail = `Excessive hedging (${lowCount} hedging patterns)`;
+    }
 
     return { name: "confidenceLanguage", score, weight: SIGNAL_WEIGHTS.confidenceLanguage, detail };
   }
 
   /** Structural completeness: headings, lists, code blocks, paragraphs */
-  private scoreStructuralCompleteness(response: ChatResponse, query: ClassifiedQuery): QualitySignal {
+  private scoreStructuralCompleteness(
+    response: ChatResponse,
+    query: ClassifiedQuery,
+  ): QualitySignal {
     const text = response.content;
     let score = 5.0;
 
     // Structural elements
     const hasHeadings = /^#{1,4}\s/m.test(text);
-    const hasList = /^[\-\*]\s|^\d+\.\s/m.test(text);
+    const hasList = /^[-*]\s|^\d+\.\s/m.test(text);
     const hasCodeBlock = /```[\s\S]*?```/.test(text);
     const hasBold = /\*\*[^*]+\*\*/.test(text);
     const paragraphCount = text.split(/\n\n+/).length;
@@ -209,22 +244,48 @@ export class QualityEstimator {
     // Scoring depends on query complexity
     if (query.complexity === "simple") {
       // Simple queries: clear, concise answer is fine
-      if (paragraphCount >= 1) score += 2;
-      if (hasList || hasBold) score += 1;
-      if (text.length > 50) score += 1;
+      if (paragraphCount >= 1) {
+        score += 2;
+      }
+      if (hasList || hasBold) {
+        score += 1;
+      }
+      if (text.length > 50) {
+        score += 1;
+      }
     } else if (query.complexity === "medium") {
-      if (paragraphCount >= 2) score += 1;
-      if (hasHeadings) score += 1;
-      if (hasList) score += 1;
-      if (hasBold) score += 0.5;
-      if (text.length > 200) score += 1;
+      if (paragraphCount >= 2) {
+        score += 1;
+      }
+      if (hasHeadings) {
+        score += 1;
+      }
+      if (hasList) {
+        score += 1;
+      }
+      if (hasBold) {
+        score += 0.5;
+      }
+      if (text.length > 200) {
+        score += 1;
+      }
     } else {
       // Complex: expect rich structure
-      if (hasHeadings) score += 1.5;
-      if (hasList) score += 1;
-      if (hasCodeBlock && query.intent === "code") score += 1;
-      if (hasBold) score += 0.5;
-      if (paragraphCount >= 3) score += 1;
+      if (hasHeadings) {
+        score += 1.5;
+      }
+      if (hasList) {
+        score += 1;
+      }
+      if (hasCodeBlock && query.intent === "code") {
+        score += 1;
+      }
+      if (hasBold) {
+        score += 0.5;
+      }
+      if (paragraphCount >= 3) {
+        score += 1;
+      }
     }
 
     // Code queries should have code blocks
@@ -233,19 +294,31 @@ export class QualityEstimator {
     }
 
     score = Math.max(0, Math.min(10, score));
-    const detail = [
-      hasHeadings ? "headings" : null,
-      hasList ? "lists" : null,
-      hasCodeBlock ? "code" : null,
-      hasBold ? "emphasis" : null,
-    ].filter(Boolean).join(", ") || "plain text";
+    const detail =
+      [
+        hasHeadings ? "headings" : null,
+        hasList ? "lists" : null,
+        hasCodeBlock ? "code" : null,
+        hasBold ? "emphasis" : null,
+      ]
+        .filter(Boolean)
+        .join(", ") || "plain text";
 
-    return { name: "structuralCompleteness", score, weight: SIGNAL_WEIGHTS.structuralCompleteness, detail: `Structure: ${detail}` };
+    return {
+      name: "structuralCompleteness",
+      score,
+      weight: SIGNAL_WEIGHTS.structuralCompleteness,
+      detail: `Structure: ${detail}`,
+    };
   }
 
   /** Length appropriateness: is the response the right size for the query? */
-  private scoreLengthAppropriateness(response: ChatResponse, query: ClassifiedQuery): QualitySignal {
-    const expected = EXPECTED_TOKENS_BY_COMPLEXITY[query.complexity] ?? EXPECTED_TOKENS_BY_COMPLEXITY.medium;
+  private scoreLengthAppropriateness(
+    response: ChatResponse,
+    query: ClassifiedQuery,
+  ): QualitySignal {
+    const expected =
+      EXPECTED_TOKENS_BY_COMPLEXITY[query.complexity] ?? EXPECTED_TOKENS_BY_COMPLEXITY.medium;
     const totalTokens = response.tokens.output;
 
     let score: number;
@@ -269,7 +342,12 @@ export class QualityEstimator {
     }
 
     score = Math.max(0, Math.min(10, score));
-    return { name: "lengthAppropriateness", score, weight: SIGNAL_WEIGHTS.lengthAppropriateness, detail };
+    return {
+      name: "lengthAppropriateness",
+      score,
+      weight: SIGNAL_WEIGHTS.lengthAppropriateness,
+      detail,
+    };
   }
 
   /** Latency vs expected: penalize slow responses */
@@ -306,7 +384,12 @@ export class QualityEstimator {
     const { input, output } = response.tokens;
 
     if (input === 0 || output === 0) {
-      return { name: "tokenEfficiency", score: 5, weight: SIGNAL_WEIGHTS.tokenEfficiency, detail: "Unknown efficiency" };
+      return {
+        name: "tokenEfficiency",
+        score: 5,
+        weight: SIGNAL_WEIGHTS.tokenEfficiency,
+        detail: "Unknown efficiency",
+      };
     }
 
     const ratio = output / input;
@@ -337,7 +420,7 @@ export class QualityEstimator {
 
   private computeConfidence(signals: QualitySignal[]): number {
     // Confidence in our assessment. Low if signals disagree wildly.
-    const scores = signals.map(s => s.score);
+    const scores = signals.map((s) => s.score);
     const mean = scores.reduce((a, b) => a + b, 0) / scores.length;
     const variance = scores.reduce((sum, s) => sum + (s - mean) ** 2, 0) / scores.length;
     const stddev = Math.sqrt(variance);
@@ -346,14 +429,25 @@ export class QualityEstimator {
   }
 
   private toGrade(score: number): "A" | "B" | "C" | "D" | "F" {
-    if (score >= 8.5) return "A";
-    if (score >= 7.0) return "B";
-    if (score >= 5.0) return "C";
-    if (score >= 3.0) return "D";
+    if (score >= 8.5) {
+      return "A";
+    }
+    if (score >= 7.0) {
+      return "B";
+    }
+    if (score >= 5.0) {
+      return "C";
+    }
+    if (score >= 3.0) {
+      return "D";
+    }
     return "F";
   }
 
-  private toRecommendation(score: number, query: ClassifiedQuery): "accept" | "escalate" | "reject" {
+  private toRecommendation(
+    score: number,
+    query: ClassifiedQuery,
+  ): "accept" | "escalate" | "reject" {
     // Thresholds depend on complexity — complex queries need higher quality
     const thresholds = {
       simple: { accept: 6, reject: 3 },
@@ -362,8 +456,12 @@ export class QualityEstimator {
     };
     const t = thresholds[query.complexity] ?? thresholds.medium;
 
-    if (score >= t.accept) return "accept";
-    if (score >= t.reject) return "escalate";
+    if (score >= t.accept) {
+      return "accept";
+    }
+    if (score >= t.reject) {
+      return "escalate";
+    }
     return "reject";
   }
 }
@@ -373,6 +471,8 @@ export class QualityEstimator {
 let _estimator: QualityEstimator | null = null;
 
 export function getQualityEstimator(): QualityEstimator {
-  if (!_estimator) _estimator = new QualityEstimator();
+  if (!_estimator) {
+    _estimator = new QualityEstimator();
+  }
   return _estimator;
 }

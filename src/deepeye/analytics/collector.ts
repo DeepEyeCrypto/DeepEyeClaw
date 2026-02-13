@@ -8,9 +8,15 @@
  */
 
 import { EventEmitter } from "node:events";
-import type { AnalyticsEvent, ProviderName, ClassifiedQuery, RoutingDecision, ActualCost } from "../types.js";
-import { childLogger } from "../utils/logger.js";
+import type {
+  AnalyticsEvent,
+  ProviderName,
+  ClassifiedQuery,
+  RoutingDecision,
+  ActualCost,
+} from "../types.js";
 import { uid } from "../utils/helpers.js";
+import { childLogger } from "../utils/logger.js";
 
 const log = childLogger("analytics");
 
@@ -161,17 +167,23 @@ export class AnalyticsCollector extends EventEmitter {
     const relevant = this.events.filter(
       (e) => e.responseTimeMs !== undefined && e.timestamp >= startMs && e.timestamp <= endMs,
     );
-    if (relevant.length === 0) return 0;
+    if (relevant.length === 0) {
+      return 0;
+    }
     return relevant.reduce((sum, e) => sum + (e.responseTimeMs ?? 0), 0) / relevant.length;
   }
 
   /** Cache hit rate for a time range. */
   cacheHitRate(startMs: number = 0, endMs: number = Date.now()): number {
     const relevant = this.events.filter(
-      (e) => (e.eventType === "query" || e.eventType === "cache_hit" || e.eventType === "cache_miss") &&
-        e.timestamp >= startMs && e.timestamp <= endMs,
+      (e) =>
+        (e.eventType === "query" || e.eventType === "cache_hit" || e.eventType === "cache_miss") &&
+        e.timestamp >= startMs &&
+        e.timestamp <= endMs,
     );
-    if (relevant.length === 0) return 0;
+    if (relevant.length === 0) {
+      return 0;
+    }
     const hits = relevant.filter((e) => e.cacheHit).length;
     return hits / relevant.length;
   }
@@ -179,8 +191,10 @@ export class AnalyticsCollector extends EventEmitter {
   /** Query count for a time range. */
   queryCount(startMs: number = 0, endMs: number = Date.now()): number {
     return this.events.filter(
-      (e) => (e.eventType === "query" || e.eventType === "cache_hit") &&
-        e.timestamp >= startMs && e.timestamp <= endMs,
+      (e) =>
+        (e.eventType === "query" || e.eventType === "cache_hit") &&
+        e.timestamp >= startMs &&
+        e.timestamp <= endMs,
     ).length;
   }
 
@@ -220,7 +234,9 @@ export class AnalyticsCollector extends EventEmitter {
     const initial = this.events.length;
     this.events = this.events.filter((e) => e.timestamp >= cutoff);
     const pruned = initial - this.events.length;
-    if (pruned > 0) log.info("pruned analytics events", { count: pruned });
+    if (pruned > 0) {
+      log.info("pruned analytics events", { count: pruned });
+    }
     return pruned;
   }
 }
@@ -230,7 +246,9 @@ export class AnalyticsCollector extends EventEmitter {
 let _collector: AnalyticsCollector | null = null;
 
 export function getAnalytics(config?: Partial<AnalyticsConfig>): AnalyticsCollector {
-  if (!_collector) _collector = new AnalyticsCollector(config);
+  if (!_collector) {
+    _collector = new AnalyticsCollector(config);
+  }
   return _collector;
 }
 

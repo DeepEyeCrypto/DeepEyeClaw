@@ -3,8 +3,8 @@
  */
 
 import { describe, it, expect, beforeEach } from "vitest";
-import { BudgetTracker, resetBudgetTracker } from "./budget-tracker.js";
 import type { ActualCost } from "./types.js";
+import { BudgetTracker, resetBudgetTracker } from "./budget-tracker.js";
 
 function makeCost(totalCost: number, provider = "openai", model = "gpt-4o-mini"): ActualCost {
   return {

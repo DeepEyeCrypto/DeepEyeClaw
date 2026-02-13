@@ -1,10 +1,10 @@
 import { Routes, Route } from "react-router-dom";
 import { Layout } from "./components/Layout";
-import { DashboardPage } from "./pages/DashboardPage";
 import { AnalyticsPage } from "./pages/AnalyticsPage";
 import { CachePage } from "./pages/CachePage";
-import { ProvidersPage } from "./pages/ProvidersPage";
 import { ConfigPage } from "./pages/ConfigPage";
+import { DashboardPage } from "./pages/DashboardPage";
+import { ProvidersPage } from "./pages/ProvidersPage";
 
 export default function App() {
   return (

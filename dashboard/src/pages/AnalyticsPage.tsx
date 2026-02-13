@@ -10,27 +10,34 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { useDashboardStore } from "../store/dashboard";
+import { ChartCard } from "../components/ChartCard";
 import {
   getCostByDay,
   getModelUsage,
   getResponseTimeDistribution,
   getComplexityDistribution,
 } from "../data/mock";
-import { ChartCard } from "../components/ChartCard";
+import { useDashboardStore } from "../store/dashboard";
 
 type TimeRange = "24h" | "7d" | "30d";
 
 function DarkTooltip({ active, payload, label }: any) {
-  if (!active || !payload?.length) return null;
+  if (!active || !payload?.length) {
+    return null;
+  }
   return (
     <div className="bg-surface border border-border rounded-xl px-4 py-3 shadow-xl">
       <p className="text-xs font-semibold text-text mb-1">{label}</p>
       {payload.map((entry: any) => (
         <div key={entry.dataKey} className="flex items-center gap-2 text-xs">
-          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color || entry.fill }} />
+          <span
+            className="w-2 h-2 rounded-full"
+            style={{ backgroundColor: entry.color || entry.fill }}
+          />
           <span className="text-text-muted capitalize">{entry.dataKey ?? entry.name}:</span>
-          <span className="font-mono font-medium text-text">{typeof entry.value === "number" ? entry.value.toFixed(2) : entry.value}</span>
+          <span className="font-mono font-medium text-text">
+            {typeof entry.value === "number" ? entry.value.toFixed(2) : entry.value}
+          </span>
         </div>
       ))}
     </div>
@@ -59,9 +66,10 @@ export function AnalyticsPage() {
 
   const totalCost = filtered.reduce((s, e) => s + e.cost, 0);
   const totalRequests = filtered.filter((e) => !e.cacheHit).length;
-  const avgTime = filtered.length > 0 ? filtered.reduce((s, e) => s + e.responseTimeMs, 0) / filtered.length : 0;
+  const avgTime =
+    filtered.length > 0 ? filtered.reduce((s, e) => s + e.responseTimeMs, 0) / filtered.length : 0;
   const p95Time = (() => {
-    const sorted = [...filtered].sort((a, b) => a.responseTimeMs - b.responseTimeMs);
+    const sorted = [...filtered].toSorted((a, b) => a.responseTimeMs - b.responseTimeMs);
     const idx = Math.floor(sorted.length * 0.95);
     return sorted[idx]?.responseTimeMs ?? 0;
   })();
@@ -69,7 +77,9 @@ export function AnalyticsPage() {
   const topQueries = useMemo(() => {
     const counts: Record<string, { count: number; totalCost: number; totalTime: number }> = {};
     filtered.forEach((e) => {
-      if (!counts[e.query]) counts[e.query] = { count: 0, totalCost: 0, totalTime: 0 };
+      if (!counts[e.query]) {
+        counts[e.query] = { count: 0, totalCost: 0, totalTime: 0 };
+      }
       counts[e.query].count++;
       counts[e.query].totalCost += e.cost;
       counts[e.query].totalTime += e.responseTimeMs;
@@ -81,7 +91,7 @@ export function AnalyticsPage() {
         avgCost: data.totalCost / data.count,
         avgTime: data.totalTime / data.count,
       }))
-      .sort((a, b) => b.count - a.count)
+      .toSorted((a, b) => b.count - a.count)
       .slice(0, 8);
   }, [filtered]);
 
@@ -156,7 +166,9 @@ export function AnalyticsPage() {
           <div className="space-y-3 mt-2">
             {modelUsage.map((m) => (
               <div key={m.model} className="flex items-center gap-3">
-                <span className="text-xs font-mono text-text-muted w-36 shrink-0 truncate">{m.model}</span>
+                <span className="text-xs font-mono text-text-muted w-36 shrink-0 truncate">
+                  {m.model}
+                </span>
                 <div className="flex-1 h-5 bg-surface-light rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all duration-700"
@@ -231,10 +243,18 @@ export function AnalyticsPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-border">
-                <th className="text-left text-[10px] uppercase tracking-wider text-text-dim py-3 px-4">Query</th>
-                <th className="text-right text-[10px] uppercase tracking-wider text-text-dim py-3 px-4">Count</th>
-                <th className="text-right text-[10px] uppercase tracking-wider text-text-dim py-3 px-4">Avg Cost</th>
-                <th className="text-right text-[10px] uppercase tracking-wider text-text-dim py-3 px-4">Avg Time</th>
+                <th className="text-left text-[10px] uppercase tracking-wider text-text-dim py-3 px-4">
+                  Query
+                </th>
+                <th className="text-right text-[10px] uppercase tracking-wider text-text-dim py-3 px-4">
+                  Count
+                </th>
+                <th className="text-right text-[10px] uppercase tracking-wider text-text-dim py-3 px-4">
+                  Avg Cost
+                </th>
+                <th className="text-right text-[10px] uppercase tracking-wider text-text-dim py-3 px-4">
+                  Avg Time
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -244,10 +264,18 @@ export function AnalyticsPage() {
                   className="border-b border-border/30 hover:bg-surface-light/30 transition-colors animate-slide-in"
                   style={{ animationDelay: `${i * 0.03}s` }}
                 >
-                  <td className="py-3 px-4 text-xs text-text max-w-xs truncate">&ldquo;{q.query}&rdquo;</td>
-                  <td className="py-3 px-4 text-xs font-mono text-text-muted text-right">{q.count}</td>
-                  <td className="py-3 px-4 text-xs font-mono text-text-muted text-right">${q.avgCost.toFixed(4)}</td>
-                  <td className="py-3 px-4 text-xs font-mono text-text-muted text-right">{(q.avgTime / 1000).toFixed(1)}s</td>
+                  <td className="py-3 px-4 text-xs text-text max-w-xs truncate">
+                    &ldquo;{q.query}&rdquo;
+                  </td>
+                  <td className="py-3 px-4 text-xs font-mono text-text-muted text-right">
+                    {q.count}
+                  </td>
+                  <td className="py-3 px-4 text-xs font-mono text-text-muted text-right">
+                    ${q.avgCost.toFixed(4)}
+                  </td>
+                  <td className="py-3 px-4 text-xs font-mono text-text-muted text-right">
+                    {(q.avgTime / 1000).toFixed(1)}s
+                  </td>
                 </tr>
               ))}
             </tbody>

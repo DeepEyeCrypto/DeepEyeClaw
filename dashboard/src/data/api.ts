@@ -10,7 +10,10 @@ const WS_URL = import.meta.env.VITE_WS_URL ?? "ws://localhost:3100/ws";
 
 export type GatewayHealth = {
   status: string;
-  providers: Record<string, { live: boolean; healthy: boolean; successRate: number; avgLatencyMs: number }>;
+  providers: Record<
+    string,
+    { live: boolean; healthy: boolean; successRate: number; avgLatencyMs: number }
+  >;
   wsClients: number;
   uptime: number;
   timestamp: number;
@@ -66,10 +69,12 @@ export type GatewayCacheStats = {
 async function fetchJson<T>(path: string): Promise<T | null> {
   try {
     const res = await fetch(`${GATEWAY_URL}${path}`, {
-      headers: { "Accept": "application/json" },
+      headers: { Accept: "application/json" },
       signal: AbortSignal.timeout(5000),
     });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      return null;
+    }
     return await res.json();
   } catch {
     return null;
@@ -139,7 +144,9 @@ export class GatewayWebSocket {
   }
 
   connect() {
-    if (this.disposed) return;
+    if (this.disposed) {
+      return;
+    }
 
     try {
       this.ws = new WebSocket(WS_URL);
@@ -153,12 +160,22 @@ export class GatewayWebSocket {
         try {
           const msg: WsMessage = JSON.parse(event.data as string);
           switch (msg.type) {
-            case "event": this.callbacks.onEvent?.(msg.data); break;
-            case "health": this.callbacks.onHealth?.(msg.data); break;
-            case "budget": this.callbacks.onBudget?.(msg.data); break;
-            case "error": this.callbacks.onError?.(msg.data); break;
+            case "event":
+              this.callbacks.onEvent?.(msg.data);
+              break;
+            case "health":
+              this.callbacks.onHealth?.(msg.data);
+              break;
+            case "budget":
+              this.callbacks.onBudget?.(msg.data);
+              break;
+            case "error":
+              this.callbacks.onError?.(msg.data);
+              break;
           }
-        } catch { /* ignore parse errors */ }
+        } catch {
+          /* ignore parse errors */
+        }
       };
 
       this.ws.onclose = () => {
@@ -175,7 +192,9 @@ export class GatewayWebSocket {
   }
 
   private scheduleReconnect() {
-    if (this.disposed) return;
+    if (this.disposed) {
+      return;
+    }
     this.reconnectTimer = setTimeout(() => {
       this.reconnectDelay = Math.min(this.reconnectDelay * 2, this.maxReconnectDelay);
       this.connect();
@@ -184,7 +203,9 @@ export class GatewayWebSocket {
 
   dispose() {
     this.disposed = true;
-    if (this.reconnectTimer) clearTimeout(this.reconnectTimer);
+    if (this.reconnectTimer) {
+      clearTimeout(this.reconnectTimer);
+    }
     this.ws?.close();
   }
 }

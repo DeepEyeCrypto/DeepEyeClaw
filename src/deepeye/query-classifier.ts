@@ -248,7 +248,9 @@ function findMatchingKeywords(text: string, keywords: string[]): string[] {
 function keywordScore(text: string, keywords: string[]): number {
   const matches = findMatchingKeywords(text, keywords);
   // Diminishing returns: first match counts most, each subsequent adds less.
-  if (matches.length === 0) return 0;
+  if (matches.length === 0) {
+    return 0;
+  }
   return Math.min(1.0, matches.length * 0.25);
 }
 
@@ -263,11 +265,17 @@ function computeComplexityScore(text: string): {
   // Base score from text length (longer queries tend to be more complex).
   const tokens = estimateTokenCount(text);
   let lengthScore = 0;
-  if (tokens < 10) lengthScore = 0.1;
-  else if (tokens < 30) lengthScore = 0.2;
-  else if (tokens < 80) lengthScore = 0.35;
-  else if (tokens < 200) lengthScore = 0.5;
-  else lengthScore = 0.65;
+  if (tokens < 10) {
+    lengthScore = 0.1;
+  } else if (tokens < 30) {
+    lengthScore = 0.2;
+  } else if (tokens < 80) {
+    lengthScore = 0.35;
+  } else if (tokens < 200) {
+    lengthScore = 0.5;
+  } else {
+    lengthScore = 0.65;
+  }
 
   // Keyword-based scoring.
   const simpleMatches = findMatchingKeywords(text, SIMPLE_INDICATORS);
@@ -310,8 +318,12 @@ function scoreToComplexity(
   thresholds?: { simple: number; medium: number; complex: number },
 ): QueryComplexity {
   const t = thresholds ?? { simple: 0.3, medium: 0.7, complex: 1.0 };
-  if (score <= t.simple) return "simple";
-  if (score <= t.medium) return "medium";
+  if (score <= t.simple) {
+    return "simple";
+  }
+  if (score <= t.medium) {
+    return "medium";
+  }
   return "complex";
 }
 
@@ -388,18 +400,28 @@ export function classifyQuery(
 export function shouldSkipCache(classified: ClassifiedQuery): boolean {
   // Real-time queries shouldn't serve stale cached responses
   // (they still get cached with short TTL after the response).
-  if (classified.isRealtime) return true;
+  if (classified.isRealtime) {
+    return true;
+  }
 
   // Creative/generative queries should produce unique responses.
-  if (classified.intent === "creative") return true;
+  if (classified.intent === "creative") {
+    return true;
+  }
 
   return false;
 }
 
 /** Determine an appropriate cache TTL (in ms) for a classified query. */
 export function suggestCacheTtl(classified: ClassifiedQuery): number {
-  if (classified.isRealtime) return 5 * 60 * 1000;  // 5 min for real-time
-  if (classified.intent === "search") return 30 * 60 * 1000; // 30 min for search
-  if (classified.complexity === "complex") return 60 * 60 * 1000; // 1hr for complex
+  if (classified.isRealtime) {
+    return 5 * 60 * 1000;
+  } // 5 min for real-time
+  if (classified.intent === "search") {
+    return 30 * 60 * 1000;
+  } // 30 min for search
+  if (classified.complexity === "complex") {
+    return 60 * 60 * 1000;
+  } // 1hr for complex
   return 60 * 60 * 1000; // 1hr default
 }

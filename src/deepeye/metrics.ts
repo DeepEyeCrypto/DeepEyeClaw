@@ -213,10 +213,7 @@ export function recordQueryMetrics(labels: QueryMetricLabels): void {
   );
 
   // Cost
-  costPerQuery.observe(
-    { provider: labels.provider, model: labels.model },
-    labels.costUsd,
-  );
+  costPerQuery.observe({ provider: labels.provider, model: labels.model }, labels.costUsd);
 
   // Tokens
   tokensPerQuery.observe(
@@ -257,11 +254,14 @@ export function recordEscalation(
 /**
  * Update budget gauges from the budget tracker.
  */
-export function updateBudgetMetrics(statuses: Array<{
-  period: string;
-  remaining: number;
-  percentUsed: number;
-}>, isEmergency: boolean): void {
+export function updateBudgetMetrics(
+  statuses: Array<{
+    period: string;
+    remaining: number;
+    percentUsed: number;
+  }>,
+  isEmergency: boolean,
+): void {
   for (const s of statuses) {
     budgetRemaining.set({ period: s.period }, s.remaining);
     budgetPercentUsed.set({ period: s.period }, s.percentUsed);

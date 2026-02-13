@@ -72,25 +72,25 @@ Built on cascade routing research from ETH Zurich (ICML 2025).
 
 Classifies every query on three axes — **complexity** (simple/medium/complex), **intent** (factual, creative, code, analysis, real-time, conversational), and **real-time awareness** — then picks the optimal strategy:
 
-| Strategy | When | What happens |
-|----------|------|-------------|
-| **Cascade** | Default | Start cheap → escalate on quality gate failure |
-| **Priority** | Complex/code | Skip to the best model immediately |
-| **Cost-optimized** | Simple queries | Force cheapest capable model |
-| **Emergency** | Budget critical | Only the cheapest model, period |
+| Strategy           | When            | What happens                                   |
+| ------------------ | --------------- | ---------------------------------------------- |
+| **Cascade**        | Default         | Start cheap → escalate on quality gate failure |
+| **Priority**       | Complex/code    | Skip to the best model immediately             |
+| **Cost-optimized** | Simple queries  | Force cheapest capable model                   |
+| **Emergency**      | Budget critical | Only the cheapest model, period                |
 
 ### 🎯 Quality Estimator
 
 Scores every AI response on a 0-10 scale using **6 weighted signals**:
 
-| Signal | Weight | What it catches |
-|--------|--------|----------------|
-| **Citation quality** | 25% | 2-5 citations ideal. 0 from Perplexity = bad. \>8 = lazy sourcing |
-| **Confidence language** | 20% | "I'm not sure" vs "Based on the evidence" |
-| **Structural completeness** | 20% | Headings, lists, code blocks — scaled by complexity |
-| **Length appropriateness** | 15% | Token count vs expected range for the complexity tier |
-| **Latency vs expected** | 10% | Timeout detection, complexity-adjusted expectations |
-| **Token efficiency** | 10% | Output/input ratio — catches truncation and bloat |
+| Signal                      | Weight | What it catches                                                   |
+| --------------------------- | ------ | ----------------------------------------------------------------- |
+| **Citation quality**        | 25%    | 2-5 citations ideal. 0 from Perplexity = bad. \>8 = lazy sourcing |
+| **Confidence language**     | 20%    | "I'm not sure" vs "Based on the evidence"                         |
+| **Structural completeness** | 20%    | Headings, lists, code blocks — scaled by complexity               |
+| **Length appropriateness**  | 15%    | Token count vs expected range for the complexity tier             |
+| **Latency vs expected**     | 10%    | Timeout detection, complexity-adjusted expectations               |
+| **Token efficiency**        | 10%    | Output/input ratio — catches truncation and bloat                 |
 
 Produces a `QualityReport` with overall score, letter grade (A-F), and recommendation: **accept**, **escalate**, or **reject**.
 
@@ -195,13 +195,13 @@ cd dashboard && npm run dev
 
 `npm run deepeye <command>`
 
-| Command | Description |
-|---------|-------------|
-| `start` | Start the gateway server |
-| `status` | Check gateway health and provider status |
-| `config` | View active configuration |
-| `budget` | Check budget usage and mode |
-| `metrics` | Fetch Prometheus metrics raw text |
+| Command   | Description                              |
+| --------- | ---------------------------------------- |
+| `start`   | Start the gateway server                 |
+| `status`  | Check gateway health and provider status |
+| `config`  | View active configuration                |
+| `budget`  | Check budget usage and mode              |
+| `metrics` | Fetch Prometheus metrics raw text        |
 
 Example:
 
@@ -223,18 +223,18 @@ npx tsc --noEmit --project tsconfig.deepeye.json
 
 ## API Endpoints
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `POST` | `/api/query` | Send a query through the routing pipeline |
-| `GET` | `/api/health` | Gateway + provider health status |
-| `GET` | `/api/analytics` | Query analytics and cost breakdowns |
-| `GET` | `/api/budget` | Current budget status across all periods |
-| `GET` | `/api/cache` | Cache statistics and hit rates |
-| `GET` | `/api/config` | Active gateway configuration |
-| `GET` | `/api/artifacts` | Recent routing artifacts (filterable by type/tag) |
-| `GET` | `/api/artifacts/:queryId` | All artifacts for a specific query |
-| `GET` | `/api/manager-view` | Aggregated system status for dashboards |
-| `GET` | `/metrics` | Prometheus metrics (scrape target) |
+| Method | Endpoint                  | Description                                       |
+| ------ | ------------------------- | ------------------------------------------------- |
+| `POST` | `/api/query`              | Send a query through the routing pipeline         |
+| `GET`  | `/api/health`             | Gateway + provider health status                  |
+| `GET`  | `/api/analytics`          | Query analytics and cost breakdowns               |
+| `GET`  | `/api/budget`             | Current budget status across all periods          |
+| `GET`  | `/api/cache`              | Cache statistics and hit rates                    |
+| `GET`  | `/api/config`             | Active gateway configuration                      |
+| `GET`  | `/api/artifacts`          | Recent routing artifacts (filterable by type/tag) |
+| `GET`  | `/api/artifacts/:queryId` | All artifacts for a specific query                |
+| `GET`  | `/api/manager-view`       | Aggregated system status for dashboards           |
+| `GET`  | `/metrics`                | Prometheus metrics (scrape target)                |
 
 ### Example Query
 
@@ -353,9 +353,9 @@ docker-compose.deepeye.yml # Docker Compose setup
 ```yaml
 # Providers — API keys, models, cost tables
 providers:
-  perplexity:   { apiKey, models: [sonar, sonar-pro, sonar-reasoning-pro] }
-  openai:       { apiKey, models: [gpt-4o-mini, gpt-4o, o1-mini] }
-  anthropic:    { apiKey, models: [claude-3-haiku, claude-3.5-sonnet, claude-3-opus] }
+  perplexity: { apiKey, models: [sonar, sonar-pro, sonar-reasoning-pro] }
+  openai: { apiKey, models: [gpt-4o-mini, gpt-4o, o1-mini] }
+  anthropic: { apiKey, models: [claude-3-haiku, claude-3.5-sonnet, claude-3-opus] }
 
 # Routing — strategy, cascade quality thresholds
 routing:
@@ -372,7 +372,7 @@ budget:
 
 # Cache — similarity threshold, TTL, adapter
 cache:
-  adapter: memory        # or "redis"
+  adapter: memory # or "redis"
   similarityThreshold: 0.85
   maxEntries: 10000
   ttlMs: 3600000
@@ -389,16 +389,16 @@ Full config reference: [`deepeyeclaw.config.yaml`](deepeyeclaw.config.yaml)
 
 ## Tech Stack
 
-| Layer | Technology |
-|-------|-----------|
-| **Runtime** | Node.js ≥ 22 |
-| **Language** | TypeScript 5.9 |
-| **Server** | Express 5 + ws |
-| **Cache** | In-memory / Redis (ioredis) |
-| **Dashboard** | React 19 + Vite 7 + Recharts |
-| **Testing** | Vitest 4 |
-| **Container** | Docker + Docker Compose |
-| **Package Manager** | pnpm 10 |
+| Layer               | Technology                   |
+| ------------------- | ---------------------------- |
+| **Runtime**         | Node.js ≥ 22                 |
+| **Language**        | TypeScript 5.9               |
+| **Server**          | Express 5 + ws               |
+| **Cache**           | In-memory / Redis (ioredis)  |
+| **Dashboard**       | React 19 + Vite 7 + Recharts |
+| **Testing**         | Vitest 4                     |
+| **Container**       | Docker + Docker Compose      |
+| **Package Manager** | pnpm 10                      |
 
 ---
 

@@ -4,12 +4,12 @@
  * Wraps GPT-4o / GPT-4o-mini via the official chat completions endpoint.
  */
 
-import { BaseProvider, type ChatRequest, type ChatResponse } from "./base.js";
 import { ProviderError } from "../utils/errors.js";
 import { uid } from "../utils/helpers.js";
+import { BaseProvider, type ChatRequest, type ChatResponse } from "./base.js";
 
 const MODEL_PRICES: Record<string, { input: number; output: number }> = {
-  "gpt-4o":      { input: 0.005, output: 0.015 },
+  "gpt-4o": { input: 0.005, output: 0.015 },
   "gpt-4o-mini": { input: 0.00015, output: 0.0006 },
 };
 
@@ -47,7 +47,11 @@ export class OpenAIProvider extends BaseProvider {
     }
   }
 
-  protected async _chat(req: ChatRequest, model: string, opts?: Record<string, unknown>): Promise<ChatResponse> {
+  protected async _chat(
+    req: ChatRequest,
+    model: string,
+    opts?: Record<string, unknown>,
+  ): Promise<ChatResponse> {
     const messages: Array<{ role: string; content: string }> = [];
 
     if (req.systemPrompt) {
@@ -63,7 +67,7 @@ export class OpenAIProvider extends BaseProvider {
       messages,
       max_tokens: req.maxTokens ?? 2048,
       temperature: req.temperature ?? 0.7,
-      ...(opts ?? {}),
+      ...opts,
     };
 
     const res = await fetch(`${BASE_URL}/chat/completions`, {

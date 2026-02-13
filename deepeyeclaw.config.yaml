@@ -127,12 +127,12 @@ routing:
 
 cache:
   enabled: true
-  type: memory  # memory | redis | sqlite
+  type: memory # memory | redis | sqlite
   similarityThreshold: 0.82
   ttl:
-    default: 3600         # 1 hour
-    realtimeQueries: 60   # 1 minute
-    staticContent: 86400  # 24 hours
+    default: 3600 # 1 hour
+    realtimeQueries: 60 # 1 minute
+    staticContent: 86400 # 24 hours
   maxEntries: 1000
 
 budget:

@@ -25,8 +25,8 @@ const SONAR: ModelDefinitionConfig = {
   reasoning: false,
   input: ["text"],
   cost: {
-    input: 1,      // $1 per 1M input tokens → $0.001 per 1K
-    output: 1,     // $1 per 1M output tokens
+    input: 1, // $1 per 1M input tokens → $0.001 per 1K
+    output: 1, // $1 per 1M output tokens
     cacheRead: 0,
     cacheWrite: 0,
   },
@@ -40,8 +40,8 @@ const SONAR_PRO: ModelDefinitionConfig = {
   reasoning: false,
   input: ["text", "image"],
   cost: {
-    input: 3,      // $3 per 1M input tokens
-    output: 15,    // $15 per 1M output tokens
+    input: 3, // $3 per 1M input tokens
+    output: 15, // $15 per 1M output tokens
     cacheRead: 0,
     cacheWrite: 0,
   },
@@ -55,8 +55,8 @@ const SONAR_REASONING_PRO: ModelDefinitionConfig = {
   reasoning: true,
   input: ["text"],
   cost: {
-    input: 2,      // $2 per 1M input tokens
-    output: 8,     // $8 per 1M output tokens
+    input: 2, // $2 per 1M input tokens
+    output: 8, // $8 per 1M output tokens
     cacheRead: 0,
     cacheWrite: 0,
   },
@@ -64,11 +64,7 @@ const SONAR_REASONING_PRO: ModelDefinitionConfig = {
   maxTokens: 16384,
 };
 
-export const PERPLEXITY_MODELS: ModelDefinitionConfig[] = [
-  SONAR,
-  SONAR_PRO,
-  SONAR_REASONING_PRO,
-];
+export const PERPLEXITY_MODELS: ModelDefinitionConfig[] = [SONAR, SONAR_PRO, SONAR_REASONING_PRO];
 
 // ─── Provider Builder (follows OpenClaw pattern) ────────────────────────────
 
@@ -168,8 +164,12 @@ export function selectPerplexityModel(params: {
   needsReasoning: boolean;
   needsDeepSearch: boolean;
 }): string {
-  if (params.needsReasoning) return "sonar-reasoning-pro";
-  if (params.needsDeepSearch) return "sonar-pro";
+  if (params.needsReasoning) {
+    return "sonar-reasoning-pro";
+  }
+  if (params.needsDeepSearch) {
+    return "sonar-pro";
+  }
   return "sonar";
 }
 
@@ -180,7 +180,9 @@ export function suggestRecencyFilter(
   isRealtime: boolean,
   text: string,
 ): PerplexitySearchOptions["search_recency_filter"] | undefined {
-  if (!isRealtime) return undefined;
+  if (!isRealtime) {
+    return undefined;
+  }
 
   const lower = text.toLowerCase();
   if (lower.includes("right now") || lower.includes("live") || lower.includes("breaking")) {
@@ -198,10 +200,10 @@ export function suggestRecencyFilter(
 /**
  * Format Perplexity citations into a readable string for messaging platforms.
  */
-export function formatCitations(
-  citations: PerplexityCitation[] | string[] | undefined,
-): string {
-  if (!citations || citations.length === 0) return "";
+export function formatCitations(citations: PerplexityCitation[] | string[] | undefined): string {
+  if (!citations || citations.length === 0) {
+    return "";
+  }
 
   const formatted = citations.map((c, i) => {
     const url = typeof c === "string" ? c : c.url;

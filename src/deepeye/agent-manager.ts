@@ -19,17 +19,17 @@
  *   6. Return response + artifacts
  */
 
-import type { ClassifiedQuery, ProviderName, RoutingDecision } from "./types.js";
+import type { SemanticCache } from "./cache/semantic.js";
 import type { ChatRequest, ChatResponse } from "./providers/base.js";
-import { classifyQuery } from "./query-classifier.js";
-import { routeQuery, executeCascade } from "./smart-router.js";
+import type { BaseProvider } from "./providers/base.js";
+import type { ClassifiedQuery, ProviderName, RoutingDecision } from "./types.js";
+import { getAnalytics } from "./analytics/collector.js";
+import { getArtifactManager, type RoutingArtifact } from "./artifacts.js";
 import { getBudgetTracker } from "./budget-tracker.js";
 import { computeActualCost } from "./cost-calculator.js";
-import { getAnalytics } from "./analytics/collector.js";
 import { getQualityEstimator } from "./quality-estimator.js";
-import { getArtifactManager, type RoutingArtifact } from "./artifacts.js";
-import type { SemanticCache } from "./cache/semantic.js";
-import type { BaseProvider } from "./providers/base.js";
+import { classifyQuery } from "./query-classifier.js";
+import { routeQuery, executeCascade } from "./smart-router.js";
 import { BudgetExceededError } from "./utils/errors.js";
 import { uid, startTimer } from "./utils/helpers.js";
 import { childLogger } from "./utils/logger.js";
@@ -151,7 +151,11 @@ export class AgentManager {
         content: cacheResult.entry.response,
         provider: cacheResult.entry.provider,
         model: cacheResult.entry.model,
-        tokens: { input: 0, output: cacheResult.entry.tokensUsed, total: cacheResult.entry.tokensUsed },
+        tokens: {
+          input: 0,
+          output: cacheResult.entry.tokensUsed,
+          total: cacheResult.entry.tokensUsed,
+        },
         cost: 0,
         responseTimeMs: elapsed(),
         cacheHit: true,
@@ -208,7 +212,13 @@ export class AgentManager {
         run: async (provider, model) => {
           const p = this.getProvider(provider);
           return p.chat(
-            { id: queryId, content, systemPrompt: opts?.systemPrompt, maxTokens: opts?.maxTokens, temperature: opts?.temperature },
+            {
+              id: queryId,
+              content,
+              systemPrompt: opts?.systemPrompt,
+              maxTokens: opts?.maxTokens,
+              temperature: opts?.temperature,
+            },
             model,
           );
         },
@@ -241,7 +251,13 @@ export class AgentManager {
       // Direct execution
       const provider = this.getProvider(routing.provider);
       response = await provider.chat(
-        { id: queryId, content, systemPrompt: opts?.systemPrompt, maxTokens: opts?.maxTokens, temperature: opts?.temperature },
+        {
+          id: queryId,
+          content,
+          systemPrompt: opts?.systemPrompt,
+          maxTokens: opts?.maxTokens,
+          temperature: opts?.temperature,
+        },
         routing.model,
       );
 
@@ -262,17 +278,20 @@ export class AgentManager {
 
     await Promise.all([
       // Store in cache
-      this.cache?.store(content, response).catch(err =>
-        log.warn("Failed to cache response", { error: String(err) })),
+      this.cache
+        ?.store(content, response)
+        .catch((err) => log.warn("Failed to cache response", { error: String(err) })),
       // Record analytics
-      Promise.resolve(analytics.recordQuery({
-        query: content,
-        classification,
-        routing,
-        cost: actualCost,
-        responseTimeMs: response.responseTimeMs,
-        cacheHit: false,
-      })),
+      Promise.resolve(
+        analytics.recordQuery({
+          query: content,
+          classification,
+          routing,
+          cost: actualCost,
+          responseTimeMs: response.responseTimeMs,
+          cacheHit: false,
+        }),
+      ),
       // Track budget
       Promise.resolve(budget.recordCost(actualCost)),
     ]);
@@ -299,15 +318,19 @@ export class AgentManager {
     const artifactMgr = getArtifactManager();
     const dailyStatus = budget.getStatus("daily");
 
-    const providerStatuses: Record<string, { healthy: boolean; latencyMs: number; successRate: number }> = {};
+    const providerStatuses: Record<
+      string,
+      { healthy: boolean; latencyMs: number; successRate: number }
+    > = {};
     for (const [name, provider] of this.providers) {
       const health = provider.getHealth();
       providerStatuses[name] = {
         healthy: health.status === "healthy",
         latencyMs: health.latencyMs,
-        successRate: health.totalRequests > 0
-          ? (health.totalRequests - health.totalErrors) / health.totalRequests
-          : 1,
+        successRate:
+          health.totalRequests > 0
+            ? (health.totalRequests - health.totalErrors) / health.totalRequests
+            : 1,
       };
     }
 
@@ -331,7 +354,9 @@ export class AgentManager {
 
   private getProvider(name: ProviderName): BaseProvider {
     const p = this.providers.get(name);
-    if (!p) throw new Error(`Provider not registered: ${name}`);
+    if (!p) {
+      throw new Error(`Provider not registered: ${name}`);
+    }
     return p;
   }
 }
@@ -341,7 +366,9 @@ export class AgentManager {
 let _agentManager: AgentManager | null = null;
 
 export function getAgentManager(): AgentManager {
-  if (!_agentManager) _agentManager = new AgentManager();
+  if (!_agentManager) {
+    _agentManager = new AgentManager();
+  }
   return _agentManager;
 }
 

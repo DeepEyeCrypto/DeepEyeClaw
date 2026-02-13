@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
 
 interface StatCardProps {
   icon: LucideIcon;
@@ -37,15 +37,15 @@ export function StatCard({
           >
             <Icon size={16} />
           </div>
-          <span className="text-xs font-medium text-text-muted uppercase tracking-wider">{label}</span>
+          <span className="text-xs font-medium text-text-muted uppercase tracking-wider">
+            {label}
+          </span>
         </div>
 
         {trend && (
           <span
             className={`text-[11px] font-mono font-medium px-2 py-0.5 rounded-full ${
-              trend.positive
-                ? "text-secondary bg-secondary/10"
-                : "text-danger bg-danger/10"
+              trend.positive ? "text-secondary bg-secondary/10" : "text-danger bg-danger/10"
             }`}
           >
             {trend.positive ? "↑" : "↓"} {trend.value}

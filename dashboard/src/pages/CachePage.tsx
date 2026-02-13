@@ -1,13 +1,5 @@
+import { Package, HardDrive, Target, Clock, Search, Trash2, Zap } from "lucide-react";
 import { useMemo, useState } from "react";
-import {
-  Package,
-  HardDrive,
-  Target,
-  Clock,
-  Search,
-  Trash2,
-  Zap,
-} from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -19,18 +11,23 @@ import {
   Pie,
   Cell,
 } from "recharts";
-import { useDashboardStore } from "../store/dashboard";
-import { StatCard } from "../components/StatCard";
 import { ChartCard } from "../components/ChartCard";
+import { StatCard } from "../components/StatCard";
+import { useDashboardStore } from "../store/dashboard";
 
 function DarkTooltip({ active, payload, label }: any) {
-  if (!active || !payload?.length) return null;
+  if (!active || !payload?.length) {
+    return null;
+  }
   return (
     <div className="bg-surface border border-border rounded-xl px-4 py-3 shadow-xl">
       <p className="text-xs font-semibold text-text mb-1">{label}</p>
       {payload.map((entry: any) => (
         <div key={entry.dataKey} className="flex items-center gap-2 text-xs">
-          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color || entry.fill }} />
+          <span
+            className="w-2 h-2 rounded-full"
+            style={{ backgroundColor: entry.color || entry.fill }}
+          />
           <span className="font-mono font-medium text-text">{entry.value}</span>
         </div>
       ))}
@@ -57,7 +54,8 @@ export function CachePage() {
 
   const totalHits = cacheEntries.reduce((s, e) => s + e.hits, 0);
   const totalEvents = events.length;
-  const hitRate = totalEvents > 0 ? (events.filter((e) => e.cacheHit).length / totalEvents) * 100 : 0;
+  const hitRate =
+    totalEvents > 0 ? (events.filter((e) => e.cacheHit).length / totalEvents) * 100 : 0;
   const totalCostSaved = events.filter((e) => e.cacheHit).length * 0.005;
   const avgTtl = cacheEntries.reduce((s, e) => s + e.ttlMs, 0) / (cacheEntries.length || 1);
 
@@ -79,22 +77,46 @@ export function CachePage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-xl font-bold text-text">Cache Management</h1>
-        <p className="text-sm text-text-muted mt-1">Semantic cache performance & entry management</p>
+        <p className="text-sm text-text-muted mt-1">
+          Semantic cache performance & entry management
+        </p>
       </div>
 
       {/* Stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="animate-fade-in-up stagger-1">
-          <StatCard icon={Package} label="Total Entries" value={cacheEntries.length.toLocaleString()} accentColor="#6366F1" />
+          <StatCard
+            icon={Package}
+            label="Total Entries"
+            value={cacheEntries.length.toLocaleString()}
+            accentColor="#6366F1"
+          />
         </div>
         <div className="animate-fade-in-up stagger-2">
-          <StatCard icon={HardDrive} label="Memory Used" value="234 MB" subtext="of 1 GB" progress={23.4} accentColor="#10B981" />
+          <StatCard
+            icon={HardDrive}
+            label="Memory Used"
+            value="234 MB"
+            subtext="of 1 GB"
+            progress={23.4}
+            accentColor="#10B981"
+          />
         </div>
         <div className="animate-fade-in-up stagger-3">
-          <StatCard icon={Target} label="Hit Rate (24h)" value={`${hitRate.toFixed(1)}%`} accentColor="#3B82F6" />
+          <StatCard
+            icon={Target}
+            label="Hit Rate (24h)"
+            value={`${hitRate.toFixed(1)}%`}
+            accentColor="#3B82F6"
+          />
         </div>
         <div className="animate-fade-in-up stagger-4">
-          <StatCard icon={Clock} label="Avg TTL" value={`${Math.round(avgTtl / 60000)} min`} accentColor="#F59E0B" />
+          <StatCard
+            icon={Clock}
+            label="Avg TTL"
+            value={`${Math.round(avgTtl / 60000)} min`}
+            accentColor="#F59E0B"
+          />
         </div>
       </div>
 
@@ -106,7 +128,10 @@ export function CachePage() {
             type="text"
             placeholder="Search cache entries..."
             value={searchQuery}
-            onChange={(e) => { setSearchQuery(e.target.value); setPage(0); }}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setPage(0);
+            }}
             className="w-full pl-9 pr-4 py-2 text-xs bg-surface border border-border rounded-xl text-text placeholder:text-text-dim focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
           />
         </div>
@@ -126,11 +151,21 @@ export function CachePage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-border">
-                <th className="text-left text-[10px] uppercase tracking-wider text-text-dim py-3 px-4">Query</th>
-                <th className="text-right text-[10px] uppercase tracking-wider text-text-dim py-3 px-4">Similarity</th>
-                <th className="text-right text-[10px] uppercase tracking-wider text-text-dim py-3 px-4">Created</th>
-                <th className="text-right text-[10px] uppercase tracking-wider text-text-dim py-3 px-4">Hits</th>
-                <th className="text-center text-[10px] uppercase tracking-wider text-text-dim py-3 px-4">Action</th>
+                <th className="text-left text-[10px] uppercase tracking-wider text-text-dim py-3 px-4">
+                  Query
+                </th>
+                <th className="text-right text-[10px] uppercase tracking-wider text-text-dim py-3 px-4">
+                  Similarity
+                </th>
+                <th className="text-right text-[10px] uppercase tracking-wider text-text-dim py-3 px-4">
+                  Created
+                </th>
+                <th className="text-right text-[10px] uppercase tracking-wider text-text-dim py-3 px-4">
+                  Hits
+                </th>
+                <th className="text-center text-[10px] uppercase tracking-wider text-text-dim py-3 px-4">
+                  Action
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -140,9 +175,15 @@ export function CachePage() {
                   className="border-b border-border/30 hover:bg-surface-light/30 transition-colors animate-slide-in"
                   style={{ animationDelay: `${i * 0.03}s` }}
                 >
-                  <td className="py-3 px-4 text-xs text-text max-w-xs truncate">&ldquo;{entry.query}&rdquo;</td>
-                  <td className="py-3 px-4 text-xs font-mono text-text-muted text-right">{entry.similarity.toFixed(2)}</td>
-                  <td className="py-3 px-4 text-xs font-mono text-text-dim text-right">{formatTimeAgo(entry.createdAt)}</td>
+                  <td className="py-3 px-4 text-xs text-text max-w-xs truncate">
+                    &ldquo;{entry.query}&rdquo;
+                  </td>
+                  <td className="py-3 px-4 text-xs font-mono text-text-muted text-right">
+                    {entry.similarity.toFixed(2)}
+                  </td>
+                  <td className="py-3 px-4 text-xs font-mono text-text-dim text-right">
+                    {formatTimeAgo(entry.createdAt)}
+                  </td>
                   <td className="py-3 px-4 text-right">
                     <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-primary/10 text-primary">
                       {entry.hits}
@@ -203,7 +244,16 @@ export function CachePage() {
             <div className="w-1/2 h-full">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
-                  <Pie data={hitDistribution} cx="50%" cy="50%" innerRadius={40} outerRadius={65} paddingAngle={4} dataKey="value" strokeWidth={0}>
+                  <Pie
+                    data={hitDistribution}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={40}
+                    outerRadius={65}
+                    paddingAngle={4}
+                    dataKey="value"
+                    strokeWidth={0}
+                  >
                     {hitDistribution.map((d, i) => (
                       <Cell key={i} fill={d.color} />
                     ))}
@@ -230,10 +280,16 @@ export function CachePage() {
 function formatTimeAgo(ts: number): string {
   const diff = Date.now() - ts;
   const s = Math.floor(diff / 1000);
-  if (s < 60) return `${s}s ago`;
+  if (s < 60) {
+    return `${s}s ago`;
+  }
   const m = Math.floor(s / 60);
-  if (m < 60) return `${m}m ago`;
+  if (m < 60) {
+    return `${m}m ago`;
+  }
   const h = Math.floor(m / 60);
-  if (h < 24) return `${h}h ago`;
+  if (h < 24) {
+    return `${h}h ago`;
+  }
   return `${Math.floor(h / 24)}d ago`;
 }

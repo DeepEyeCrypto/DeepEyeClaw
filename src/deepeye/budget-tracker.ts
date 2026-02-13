@@ -62,9 +62,12 @@ function getPeriodBounds(period: BudgetPeriod, now: number): { start: number; en
 
 function getLimit(config: BudgetConfig, period: BudgetPeriod): number {
   switch (period) {
-    case "daily": return config.dailyLimit;
-    case "weekly": return config.weeklyLimit;
-    case "monthly": return config.monthlyLimit;
+    case "daily":
+      return config.dailyLimit;
+    case "weekly":
+      return config.weeklyLimit;
+    case "monthly":
+      return config.monthlyLimit;
   }
 }
 
@@ -111,9 +114,7 @@ export class BudgetTracker {
 
   /** Get all budget statuses. */
   getAllStatuses(): BudgetStatus[] {
-    return (["daily", "weekly", "monthly"] as BudgetPeriod[]).map((p) =>
-      this.getStatus(p),
-    );
+    return (["daily", "weekly", "monthly"] as BudgetPeriod[]).map((p) => this.getStatus(p));
   }
 
   /** Remaining budget for the current day. */
@@ -133,7 +134,9 @@ export class BudgetTracker {
 
   /** Check if a provider is disabled by emergency mode. */
   isProviderDisabled(provider: ProviderName): boolean {
-    if (!this.emergencyModeActive) return false;
+    if (!this.emergencyModeActive) {
+      return false;
+    }
     return this.config.emergencyMode.disableProviders.includes(provider);
   }
 
@@ -208,11 +211,7 @@ export class BudgetTracker {
     }
   }
 
-  private fireAlert(
-    action: string,
-    status: BudgetStatus,
-    channels?: string[],
-  ): void {
+  private fireAlert(action: string, status: BudgetStatus, channels?: string[]): void {
     const msg = `[DeepEyeClaw Budget] ${action.toUpperCase()}: ${status.percentUsed.toFixed(1)}% of daily budget used ($${status.spent.toFixed(4)} / $${status.limit.toFixed(2)})`;
 
     switch (action) {
