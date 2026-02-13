@@ -12,24 +12,24 @@
  * Run: npx tsx src/deepeye/gateway/server.ts
  */
 
-import express from "express";
 import cors from "cors";
+import dotenv from "dotenv";
+import express from "express";
+import rateLimit from "express-rate-limit";
 import helmet from "helmet";
 import { createServer } from "node:http";
-import dotenv from "dotenv";
-
 import type { ProviderName } from "../types.js";
-import { BaseProvider } from "../providers/base.js";
-import { PerplexityProvider } from "../providers/perplexity.js";
-import { OpenAIProvider } from "../providers/openai.js";
-import { AnthropicProvider } from "../providers/anthropic.js";
-import { SemanticCache } from "../cache/semantic.js";
-import { MemoryAdapter } from "../cache/adapters/memory.js";
 import { getAnalytics } from "../analytics/collector.js";
 import { getBudgetTracker } from "../budget-tracker.js";
-import { WebSocketHub } from "./websocket.js";
-import { createRouter } from "./routes.js";
+import { MemoryAdapter } from "../cache/adapters/memory.js";
+import { SemanticCache } from "../cache/semantic.js";
+import { AnthropicProvider } from "../providers/anthropic.js";
+import { BaseProvider } from "../providers/base.js";
+import { OpenAIProvider } from "../providers/openai.js";
+import { PerplexityProvider } from "../providers/perplexity.js";
 import { logger, childLogger } from "../utils/logger.js";
+import { createRouter } from "./routes.js";
+import { WebSocketHub } from "./websocket.js";
 
 dotenv.config();
 
@@ -113,9 +113,68 @@ export async function startGateway() {
   // 6. Express app
   const app = express();
 
-  app.use(helmet({ contentSecurityPolicy: false }));
-  app.use(cors());
+  // Security: Helmet
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          connectSrc: ["'self'", process.env.VITE_API_URL || "ws://localhost:3100"],
+          scriptSrc: ["'self'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+        },
+      },
+      hsts: {
+        maxAge: 31536000,
+        includeSubDomains: true,
+        preload: true,
+      },
+    }),
+  );
+
+  // Security: CORS (Dynamic)
+  app.use(
+    cors({
+      origin: function (origin, callback) {
+        const allowedOrigins = [
+          "http://localhost:3000",
+          "http://localhost:8080",
+          "http://localhost:5173", // Vite dev
+          process.env.PRODUCTION_ORIGIN,
+        ].filter(Boolean) as string[];
+
+        // Allow requests with no origin (mobile apps, curl, Postman)
+        if (!origin) {
+          return callback(null, true);
+        }
+
+        if (allowedOrigins.includes(origin) || process.env.NODE_ENV !== "production") {
+          callback(null, true);
+        } else {
+          callback(new Error("Not allowed by CORS"));
+        }
+      },
+      credentials: true,
+      methods: ["GET", "POST", "PUT", "DELETE"],
+      allowedHeaders: ["Content-Type", "Authorization"],
+    }),
+  );
+
+  // Security: Rate Limiting
+  const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    limit: 100, // Limit each IP to 100 requests per `windowMs`
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { error: "Too many requests, please try again later." },
+  });
+
+  // Apply rate limiting to all requests (or specific paths if preferred)
+  app.use(limiter);
+
+  // Security: Request limits
   app.use(express.json({ limit: "1mb" }));
+  app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 
   // Request logging
   app.use((req, _res, next) => {
@@ -156,7 +215,9 @@ export async function startGateway() {
 
   // 8. Periodic maintenance
   setInterval(() => {
-    cache.pruneExpired().catch((e) => log.error("cache prune failed", { error: (e as Error).message }));
+    cache
+      .pruneExpired()
+      .catch((e) => log.error("cache prune failed", { error: (e as Error).message }));
     analytics.prune();
   }, 300_000); // every 5 min
 

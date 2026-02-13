@@ -1,5 +1,12 @@
 import { create } from "zustand";
 import {
+  checkGatewayHealth,
+  fetchAnalytics,
+  fetchBudget,
+  fetchCacheStats,
+  GatewayWebSocket,
+} from "../data/api";
+import {
   generateQueryEvents,
   generateAlerts,
   generateCacheEntries,
@@ -9,13 +16,6 @@ import {
   type CacheEntry,
   type ProviderStatus,
 } from "../data/mock";
-import {
-  checkGatewayHealth,
-  fetchAnalytics,
-  fetchBudget,
-  fetchCacheStats,
-  GatewayWebSocket,
-} from "../data/api";
 
 type TimeRange = "24h" | "7d" | "30d" | "custom";
 type ConnectionStatus = "connected" | "disconnected" | "mock";
@@ -142,21 +142,24 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
   avgResponseTime: () => {
     const todayStart = new Date().setHours(0, 0, 0, 0);
     const today = get().events.filter((e) => e.timestamp >= todayStart);
-    if (today.length === 0) return 0;
+    if (today.length === 0) {
+      return 0;
+    }
     return today.reduce((s, e) => s + e.responseTimeMs, 0) / today.length;
   },
 
   cacheHitRate: () => {
     const todayStart = new Date().setHours(0, 0, 0, 0);
     const today = get().events.filter((e) => e.timestamp >= todayStart);
-    if (today.length === 0) return 0;
+    if (today.length === 0) {
+      return 0;
+    }
     return (today.filter((e) => e.cacheHit).length / today.length) * 100;
   },
 
   filteredEvents: () => {
     const range = get().timeRange;
-    const cutoff =
-      range === "24h" ? now - day : range === "7d" ? now - 7 * day : now - 30 * day;
+    const cutoff = range === "24h" ? now - day : range === "7d" ? now - 7 * day : now - 30 * day;
     return get().events.filter((e) => e.timestamp >= cutoff);
   },
 }));
